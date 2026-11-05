@@ -6,6 +6,7 @@ use super::uhd::version_from_binary;
 pub struct InstalledUhd {
     pub version: String,
     pub install_dir: PathBuf,
+    #[allow(dead_code)]
     pub bin_dir: PathBuf,
     pub is_active: bool,
 }

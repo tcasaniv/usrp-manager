@@ -31,6 +31,7 @@ impl Release {
     }
 
     /// Find Windows installer asset (VS2019 or VS2022)
+    #[allow(dead_code)]
     pub fn windows_installer(&self) -> Option<&Asset> {
         self.assets.iter().find(|a| {
             a.name.contains("Win64") && a.name.ends_with(".exe")

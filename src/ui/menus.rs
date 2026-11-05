@@ -516,15 +516,12 @@ fn drivers_install_linux(config: &AppConfig, version: &str) {
 
         ok(&format!("UHD {} built and installed to {}", version, prefix.display()));
 
-        match confirm(&format!("Activate UHD {} now?", version), true) {
-            Ok(true) => {
-                if let Err(e) = crate::drivers::linux::set_active_version(&prefix) {
-                    err(&format!("Failed to update ~/.bashrc: {}", e));
-                } else {
-                    ok(&t!("drivers.activated", version = version));
-                }
+        if let Ok(true) = confirm(&format!("Activate UHD {} now?", version), true) {
+            if let Err(e) = crate::drivers::linux::set_active_version(&prefix) {
+                err(&format!("Failed to update ~/.bashrc: {}", e));
+            } else {
+                ok(&t!("drivers.activated", version = version));
             }
-            _ => {}
         }
     }
     press_enter();
@@ -558,15 +555,12 @@ fn drivers_install_macos(config: &AppConfig, version: &str) {
                 err(&format!("Build failed: {}", e));
             } else {
                 ok(&format!("UHD {} built to {}", version, prefix.display()));
-                match confirm(&format!("Activate UHD {} now?", version), true) {
-                    Ok(true) => {
-                        if let Err(e) = crate::drivers::macos::set_active_version(&prefix) {
-                            err(&format!("Failed to update ~/.zprofile: {}", e));
-                        } else {
-                            ok(&t!("drivers.activated", version = version));
-                        }
+                if let Ok(true) = confirm(&format!("Activate UHD {} now?", version), true) {
+                    if let Err(e) = crate::drivers::macos::set_active_version(&prefix) {
+                        err(&format!("Failed to update ~/.zprofile: {}", e));
+                    } else {
+                        ok(&t!("drivers.activated", version = version));
                     }
-                    _ => {}
                 }
             }
         }

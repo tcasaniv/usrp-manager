@@ -3,6 +3,7 @@ use std::process::{Command, Stdio};
 
 pub struct CmdResult {
     pub success: bool,
+    #[allow(dead_code)]
     pub exit_code: i32,
     pub output: String,
 }
