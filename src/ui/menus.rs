@@ -1,7 +1,7 @@
 use crate::config::AppConfig;
 use crate::detection::{
     jtag as jtag_det, network, system,
-    uhd::{self, ActiveUhd},
+    uhd,
     uhd_versions,
 };
 use crate::images::{
@@ -9,7 +9,7 @@ use crate::images::{
     github::{self, Release},
     local,
 };
-use crate::ui::prompts::{confirm, fuzzy_select_str, input, select, select_str};
+use crate::ui::prompts::{confirm, fuzzy_select_str, input, select_str};
 use crate::ui::styles::{
     dim, err, info, ok, press_enter, print_section, step, warn,
 };
@@ -51,7 +51,7 @@ pub fn main_menu(config: &mut AppConfig) {
             6 => {
                 settings_menu(config);
             }
-            7 | _ => {
+            _ => {
                 println!("\n  {} Goodbye!\n", style("👋").bold());
                 break;
             }
@@ -180,7 +180,7 @@ pub fn images_menu(config: &AppConfig) {
         match idx {
             0 => images_download(config),
             1 => images_view_local(config),
-            2 | _ => break,
+            _ => break,
         }
     }
 }
@@ -352,7 +352,7 @@ pub fn drivers_menu(config: &mut AppConfig) {
         match idx {
             0 => drivers_install(config),
             1 => drivers_activate(config),
-            2 | _ => break,
+            _ => break,
         }
     }
 }
@@ -457,15 +457,12 @@ fn drivers_install_windows(config: &AppConfig, release: &Release, version: &str)
 
     ok(&format!("UHD {} installed to {}", version, target_dir.display()));
 
-    match confirm(&format!("Activate UHD {} now?", version), true) {
-        Ok(true) => {
-            let bin_dir = target_dir.join("bin");
-            match crate::drivers::windows::set_active_version(&bin_dir) {
-                Ok(_) => ok(&t!("drivers.activated", version = version)),
-                Err(e) => err(&format!("Failed to update PATH: {}", e)),
-            }
+    if let Ok(true) = confirm(&format!("Activate UHD {} now?", version), true) {
+        let bin_dir = target_dir.join("bin");
+        match crate::drivers::windows::set_active_version(&bin_dir) {
+            Ok(_) => ok(&t!("drivers.activated", version = version)),
+            Err(e) => err(&format!("Failed to update PATH: {}", e)),
         }
-        _ => {}
     }
     press_enter();
 }
@@ -720,7 +717,7 @@ pub fn settings_menu(config: &mut AppConfig) {
                     ok(&t!("settings.saved"));
                 }
             }
-            3 | _ => break,
+            _ => break,
         }
     }
 }

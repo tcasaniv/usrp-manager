@@ -58,8 +58,6 @@ pub fn install_from_package(pm: &PackageManager) -> Result<()> {
 
 #[cfg(target_os = "linux")]
 pub fn build_from_source(tag: &str, prefix: &Path) -> Result<()> {
-    use std::env;
-
     let tmp = std::env::temp_dir().join(format!("uhd-build-{}", tag));
     std::fs::create_dir_all(&tmp)?;
 

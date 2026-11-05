@@ -4,6 +4,7 @@ use anyhow::Result;
 #[derive(Debug, Clone, Deserialize)]
 pub struct Release {
     pub tag_name: String,
+    #[allow(dead_code)]
     pub name: String,
     pub published_at: String,
     pub assets: Vec<Asset>,

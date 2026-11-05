@@ -90,18 +90,11 @@ pub fn run_silent(program: &str, args: &[&str]) -> Option<String> {
 }
 
 /// Run a command silently, return output regardless of exit code.
+#[allow(dead_code)]
 pub fn run_silent_any(program: &str, args: &[&str]) -> Option<String> {
     let result = Command::new(program).args(args).output().ok()?;
     let out = String::from_utf8_lossy(&result.stdout).trim().to_string();
     let err = String::from_utf8_lossy(&result.stderr).trim().to_string();
-    let combined = if !out.is_empty() {
-        out
-    } else {
-        err
-    };
-    if combined.is_empty() {
-        None
-    } else {
-        Some(combined)
-    }
+    let combined = if !out.is_empty() { out } else { err };
+    if combined.is_empty() { None } else { Some(combined) }
 }

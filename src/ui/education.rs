@@ -1,7 +1,7 @@
 use console::style;
 use rust_i18n::t;
 
-use super::styles::{dim, info, press_enter, print_section, warn};
+use super::styles::{info, press_enter, print_section, warn};
 
 pub fn show_education_menu() {
     loop {
@@ -28,7 +28,7 @@ pub fn show_education_menu() {
             4 => show_version_guide(),
             5 => show_models(),
             6 => show_n210_guide(),
-            7 | _ => break,
+            _ => break,
         }
     }
 }

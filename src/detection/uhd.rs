@@ -1,5 +1,5 @@
 use crate::executor::run_silent;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use which::which;
 
 #[derive(Debug, Clone)]
@@ -40,7 +40,7 @@ fn parse_uhd_version(raw: &str) -> Option<String> {
 }
 
 /// Get UHD version string from a specific binary path.
-pub fn version_from_binary(uhd_config_info: &PathBuf) -> Option<String> {
+pub fn version_from_binary(uhd_config_info: &Path) -> Option<String> {
     let out = run_silent(uhd_config_info.to_str()?, &["--version"])?;
     parse_uhd_version(&out)
 }

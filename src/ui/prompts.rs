@@ -48,7 +48,7 @@ pub fn confirm(prompt: &str, default: bool) -> Result<bool> {
 /// Free text input with optional default
 pub fn input(prompt: &str, default: Option<&str>) -> Result<String> {
     let theme = theme();
-    let mut inp: Input<String> = Input::with_theme(&theme);
+    let inp: Input<String> = Input::with_theme(&theme);
     let inp = inp.with_prompt(prompt);
     let inp = if let Some(d) = default {
         inp.default(d.to_string())

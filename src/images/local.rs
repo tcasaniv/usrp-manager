@@ -5,6 +5,7 @@ pub struct LocalImageSet {
     /// e.g. "4.10.0.0"
     pub version: String,
     /// Directory containing the .bit files
+    #[allow(dead_code)]
     pub dir: PathBuf,
     pub bitfiles: Vec<PathBuf>,
 }

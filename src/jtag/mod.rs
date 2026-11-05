@@ -42,7 +42,7 @@ pub fn run_jtag_unbrick(config: &AppConfig) {
                         println!("    {}", line);
                     }
                 }
-                _ => {}
+                OsType::Other => {}
             }
             press_enter();
             return;
@@ -154,11 +154,8 @@ pub fn run_jtag_unbrick(config: &AppConfig) {
         println!();
 
         // 8. Offer permanent flash
-        match confirm(&t!("jtag.offer_permanent"), true) {
-            Ok(true) => {
-                crate::flash::run_flash_network(config);
-            }
-            _ => {}
+        if let Ok(true) = confirm(&t!("jtag.offer_permanent"), true) {
+            crate::flash::run_flash_network(config);
         }
     } else {
         err("JTAG programming failed.");
@@ -208,13 +205,12 @@ fn scan_for_bit(
 }
 
 fn select_bitstream(
-    config: &AppConfig,
+    _config: &AppConfig,
     local_images: &[crate::images::local::LocalImageSet],
     usrp_model: &str,
     variant: &str,
     extra_paths: &[std::path::PathBuf],
 ) -> Option<std::path::PathBuf> {
-    // Build list of available bitstreams
     let mut options: Vec<String> = Vec::new();
     let mut paths: Vec<std::path::PathBuf> = Vec::new();
 

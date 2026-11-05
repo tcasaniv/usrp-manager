@@ -1,8 +1,9 @@
 use crate::executor::run_silent;
-use std::path::PathBuf;
+use std::path::Path;
 
 #[derive(Debug, Clone)]
 pub struct FoundUsrp {
+    #[allow(dead_code)]
     pub ip: String,
     pub model: Option<String>,
     pub serial: Option<String>,
@@ -36,7 +37,7 @@ pub fn scan_defaults() -> Vec<String> {
 }
 
 /// Probe a USRP using uhd_find_devices.
-pub fn probe_with_uhd(ip: &str, uhd_find: &PathBuf) -> Option<FoundUsrp> {
+pub fn probe_with_uhd(ip: &str, uhd_find: &Path) -> Option<FoundUsrp> {
     let addr_arg = format!("addr={}", ip);
     let result = run_silent(
         uhd_find.to_str().unwrap_or("uhd_find_devices"),

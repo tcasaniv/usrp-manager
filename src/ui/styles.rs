@@ -20,6 +20,7 @@ pub fn print_header() {
     println!();
 }
 
+#[allow(dead_code)]
 pub fn print_header_simple() {
     println!();
     println!(

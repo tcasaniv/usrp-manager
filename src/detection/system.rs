@@ -17,6 +17,7 @@ pub fn is_admin() -> bool {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum OsType {
     Windows,

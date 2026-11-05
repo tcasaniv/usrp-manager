@@ -38,3 +38,6 @@ opt-level     = 3
 strip         = true
 lto           = true
 codegen-units = 1
+
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+libc = "0.2"

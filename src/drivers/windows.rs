@@ -1,7 +1,7 @@
 #[cfg(target_os = "windows")]
 use anyhow::{bail, Result};
 #[cfg(target_os = "windows")]
-use std::path::{Path, PathBuf};
+use std::path::Path;
 #[cfg(target_os = "windows")]
 use winreg::enums::*;
 #[cfg(target_os = "windows")]
@@ -91,6 +91,7 @@ pub fn install_from_exe(installer: &Path, target_dir: &Path) -> Result<()> {
 
 /// Scan UHD_versions dir for installed UHD versions.
 #[cfg(target_os = "windows")]
+#[allow(dead_code)]
 pub fn detect_installed(versions_dir: &Path, active_bin: Option<&Path>) -> Vec<super::common::InstalledUhd> {
     crate::detection::uhd_versions::detect_installed_versions(versions_dir, active_bin)
         .into_iter()

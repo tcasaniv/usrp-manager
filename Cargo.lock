@@ -2106,6 +2106,7 @@ dependencies = [
  "dirs",
  "hex",
  "indicatif",
+ "libc",
  "reqwest",
  "rust-i18n",
  "serde",

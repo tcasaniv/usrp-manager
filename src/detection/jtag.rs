@@ -1,5 +1,5 @@
 use crate::executor::{run_silent, run_visible};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use which::which;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -30,6 +30,7 @@ impl FpgaModel {
 #[derive(Debug, Clone)]
 pub struct JtagDevice {
     pub name: String,
+    #[allow(dead_code)]
     pub transport: String,
     pub product: String,
     pub serial: String,
@@ -60,7 +61,7 @@ pub fn find_djtgcfg() -> Option<PathBuf> {
 }
 
 /// Enumerate connected JTAG devices.
-pub fn enumerate(djtgcfg: &PathBuf) -> Vec<JtagDevice> {
+pub fn enumerate(djtgcfg: &Path) -> Vec<JtagDevice> {
     let result = run_visible(djtgcfg.to_str().unwrap_or("djtgcfg"), &["enum"]);
     if !result.success {
         return vec![];
@@ -110,7 +111,7 @@ fn parse_enum_output(output: &str) -> Vec<JtagDevice> {
 }
 
 /// Initialize JTAG scan chain and return detected FPGA model.
-pub fn init_and_detect(djtgcfg: &PathBuf, device_name: &str) -> Option<FpgaModel> {
+pub fn init_and_detect(djtgcfg: &Path, device_name: &str) -> Option<FpgaModel> {
     let result = run_visible(
         djtgcfg.to_str().unwrap_or("djtgcfg"),
         &["init", "-d", device_name],
@@ -148,7 +149,7 @@ pub fn init_and_detect(djtgcfg: &PathBuf, device_name: &str) -> Option<FpgaModel
 }
 
 /// Program the FPGA via JTAG.
-pub fn program(djtgcfg: &PathBuf, device_name: &str, bitfile: &std::path::Path) -> bool {
+pub fn program(djtgcfg: &Path, device_name: &str, bitfile: &std::path::Path) -> bool {
     let bitfile_str = bitfile.to_str().unwrap_or("");
     let result = run_visible(
         djtgcfg.to_str().unwrap_or("djtgcfg"),
@@ -158,7 +159,8 @@ pub fn program(djtgcfg: &PathBuf, device_name: &str, bitfile: &std::path::Path) 
 }
 
 /// Quick check: returns true if djtgcfg enum finds at least one device (silent).
-pub fn has_jtag_device(djtgcfg: &PathBuf) -> bool {
+#[allow(dead_code)]
+pub fn has_jtag_device(djtgcfg: &Path) -> bool {
     let out = run_silent(
         djtgcfg.to_str().unwrap_or("djtgcfg"),
         &["enum"],
