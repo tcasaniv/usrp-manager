@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-06
+
+### Added
+- **Multi-version UHD Detection & Quick Switcher**: System Diagnostic now scans `config.uhd_versions_dir` (e.g. `C:\Program Files\UHD_versions` or `/opt/uhd/`), displays all detected versions with active marks, and prompts the user to switch the active UHD version directly on the spot.
+- **Probe USRP Menu ("📡 Probar USRP / Test USRP")**: Dedicated interactive menu replacing manual runs of `uhd_find_devices` and `uhd_usrp_probe`. Automatically detects connected devices, allows manual IP/args input (`addr=192.168.10.2`), prints the exact command executed, and summarizes daughterboards, frequencies, channels, and serial numbers with optional full raw output display.
+- **Host Network NIC Assistant**: In Diagnostic, if no USRP is detected over Ethernet, actionable network hints and exact commands (`netsh` on Windows, `ip addr` on Linux) are presented to guide setting the host PC to `192.168.10.1`.
+- **Full Educational Internationalization**: Migrated all 8 educational topics to complete bilingual localization in English (`en.yml`) and Spanish (`es.yml`).
+
+### Fixed
+- **FPGA Images Multi-line SHA-256 Verification**: Fixed checksum validation failure on GitHub release assets where `.sha256` files contain entries for `.tar.gz`, `.tar.xz`, and `.zip`. The parser now searches for the exact asset filename.
+- **Full Command Visibility**: All operations print the exact command and arguments using `● <cmd>` in bright yellow before execution, enabling users to copy and paste them elsewhere.
+
+---
+
 ## [0.1.0] - 2026-11-05
 
 ### Added
@@ -44,5 +58,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `winreg 0.52` (Windows only)
 - `libc 0.2` (Linux/macOS only)
 
-[Unreleased]: https://github.com/tcasaniv/usrp-manager/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/tcasaniv/usrp-manager/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/tcasaniv/usrp-manager/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tcasaniv/usrp-manager/releases/tag/v0.1.0

@@ -27,6 +27,7 @@ pub fn main_menu(config: &mut AppConfig) {
 
         let items = vec![
             t!("menu.diagnostic").to_string(),
+            "??  Probar USRP (Probe & Hardware)".to_string(),
             t!("menu.jtag_unbrick").to_string(),
             t!("menu.flash_network").to_string(),
             t!("menu.manage_images").to_string(),
@@ -43,12 +44,13 @@ pub fn main_menu(config: &mut AppConfig) {
 
         match idx {
             0 => diagnostic_menu(config),
-            1 => crate::jtag::run_jtag_unbrick(config),
-            2 => crate::flash::run_flash_network(config),
-            3 => images_menu(config),
-            4 => drivers_menu(config),
-            5 => crate::ui::education::show_education_menu(),
-            6 => {
+            1 => crate::ui::probe::run_probe_menu(),
+            2 => crate::jtag::run_jtag_unbrick(config),
+            3 => crate::flash::run_flash_network(config),
+            4 => images_menu(config),
+            5 => drivers_menu(config),
+            6 => crate::ui::education::show_education_menu(),
+            7 => {
                 settings_menu(config);
             }
             _ => {
@@ -179,7 +181,7 @@ pub fn images_menu(config: &AppConfig) {
 
         match idx {
             0 => images_download(config),
-            1 => images_view_local(config),
+            2 => images_view_local(config),
             _ => break,
         }
     }
@@ -293,7 +295,13 @@ fn images_download(config: &AppConfig) {
         if download_with_progress(&sha_asset.browser_download_url, &sha_path, &sha_asset.name).is_ok() {
             if let Ok(sha_content) = std::fs::read_to_string(&sha_path) {
                 // sha256 file usually: "hexhash  filename"
-                let expected = sha_content.split_whitespace().next().unwrap_or("").to_string();
+                // Find the specific hash line matching the asset name (e.g. uhd-images_x.y.z.zip)
+                let expected = sha_content
+                    .lines()
+                    .find(|line| line.contains(&asset.name))
+                    .and_then(|line| line.split_whitespace().next())
+                    .unwrap_or("")
+                    .to_string();
                 if verify_sha256(&zip_path, &expected) {
                     ok(&t!("images.verify_ok"));
                 } else {
@@ -351,7 +359,7 @@ pub fn drivers_menu(config: &mut AppConfig) {
 
         match idx {
             0 => drivers_install(config),
-            1 => drivers_activate(config),
+            2 => drivers_activate(config),
             _ => break,
         }
     }
@@ -547,7 +555,7 @@ fn drivers_install_macos(config: &AppConfig, version: &str) {
                 ok("UHD installed via Homebrew.");
             }
         }
-        1 => {
+            2 => {
             let tag = format!("v{}", version);
             let prefix = config.uhd_versions_dir.join(format!("uhd-{}", version));
             step(&t!("drivers.building", version = version));
@@ -689,7 +697,7 @@ pub fn settings_menu(config: &mut AppConfig) {
                     }
                 }
             }
-            1 => {
+            2 => {
                 // Images dir
                 if let Ok(new_path) =
                     input(&t!("settings.images_dir"), Some(&config.images_cache_dir.display().to_string()))
@@ -700,7 +708,7 @@ pub fn settings_menu(config: &mut AppConfig) {
                     ok(&t!("settings.saved"));
                 }
             }
-            2 => {
+            3 => {
                 // UHD versions dir
                 if let Ok(new_path) =
                     input(&t!("settings.uhd_versions_dir"), Some(&config.uhd_versions_dir.display().to_string()))

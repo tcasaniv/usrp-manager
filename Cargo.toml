@@ -1,6 +1,6 @@
 [package]
 name = "usrp-manager"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Interactive CLI for managing Ettus Research USRP SDR devices"
 authors = ["tcasaniv <https://github.com/tcasaniv>"]
