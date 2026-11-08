@@ -1,99 +1,54 @@
 # usrp-manager
 
-**Interactive CLI tool for managing Ettus Research USRP SDR devices.**
+> **Interactive CLI Manager for Ettus Research USRP Software Defined Radios (SDR)**
 
-> Unbrick, flash, download FPGA images, install and switch UHD driver versions — guided step-by-step.
-
----
-
-## ✨ Features
-
-- 🔍 **System Diagnostic** — detects UHD version, djtgcfg, USRP on network, version mismatches
-- ⚡ **Unbrick via JTAG** — recovers a bricked USRP X300/X310 using a Digilent JTAG cable (`djtgcfg`)
-- 🌐 **Flash FPGA via Network** — permanently writes FPGA image to USRP flash over Ethernet
-- 📥 **Manage FPGA Images** — browse GitHub releases, download & cache images locally
-- 🛠 **Manage UHD Drivers** — install multiple UHD versions side-by-side, switch active version in PATH
-- 📚 **Guide / Education** — built-in explanations for novices (what is USRP, antenna safety, bricking, versions)
-- 🌍 **i18n** — English (default) + Spanish; switch from Settings menu
-- 💻 **Windows, Linux, macOS** — single binary, no prior tools assumed
+`usrp-manager` provides a guided, interactive terminal experience for telecom labs, university students, and SDR researchers. It removes the friction of remembering syntax and flags for utilities like `uhd_find_devices`, `uhd_usrp_probe`, `uhd_image_loader`, and JTAG recovery tools.
 
 ---
 
-## 🚀 Download & Run
+## 🌟 Key Capabilities
 
-Download the latest binary for your OS from [Releases](https://github.com/tcasaniv/usrp-manager/releases).
-
-```
-# Windows
-usrp-manager.exe
-
-# Linux / macOS
-chmod +x usrp-manager
-./usrp-manager
-```
-
-No installation required. Just run and follow the menus.
-
----
-
-## 🔧 Supported Hardware
-
-| Model | JTAG Unbrick | Network Flash | Notes |
-|-------|-------------|---------------|-------|
-| USRP X300 | ✅ | ✅ | XC7K325T |
-| USRP X310 | ✅ | ✅ | XC7K410T |
-| USRP N210 | ❌ (text guide) | Ethernet bootloader | Different process |
-| USRP B2xx | ❌ | Via USB/UHD | No JTAG needed |
+1. **Full CLI Transparency**: Every single executed command is highlighted in bright yellow (`● <cmd> <args>`) with live output, so you can copy and paste commands directly into scripts or other terminals.
+2. **System Diagnostic with Multi-Version Switcher**:
+   - Detects active and installed UHD driver versions (`UHD-4.5` through `UHD-4.11`).
+   - Switch active UHD versions on the spot without leaving the diagnostic view.
+   - Detects local host IP subnet configuration and provides copy-paste commands to set static IP (`192.168.10.1`) when needed.
+3. **Hardware Inspection ("📡 Probar USRP / Test USRP")**:
+   - Replaces manual invocation of `uhd_usrp_probe`.
+   - Discovers connected devices over Ethernet/USB, parses daughterboards (RF frontends), supported frequency bands, and serial numbers into clean colored tables.
+4. **Permanent FPGA Network Flashing Wizard**:
+   - Explains what permanent flashing means and guides users through device detection, model selection (N210, X310, N310, etc.), and image variant selection (`HG`, `XG`).
+   - Builds the exact `uhd_image_loader` command for explicit confirmation.
+5. **JTAG Unbrick Assistant (Zero-Assumption Guidance)**:
+   - Complete physical setup instructions per device (e.g. holding button **S2** on USRP N210 for safe boot; front micro-USB JTAG on X300/X310).
+   - Detects Digilent JTAG cables via `djtgcfg`, initialises JTAG chains, loads volatile `.bit` images, and seamlessly transitions to permanent network flashing once recovered.
+6. **FPGA Image Downloader & Cache Manager**:
+   - Downloads official release images from GitHub with progress bars and SHA-256 verification.
+   - Automatically unpacks and organizes bitstream files ready for immediate flashing.
+7. **Educational Guides**:
+   - 8 interactive educational topics covering SDR concepts, FPGA architectures, RF antenna safety, brick recovery, and compatibility.
+   - Bilingual support: English and Spanish.
 
 ---
 
-## 📋 Requirements for JTAG Unbricking
+## 🚀 Installation & Running
 
-- Digilent JTAG-HS2/HS3 cable (or compatible FTDI-based JTAG)
-- Digilent Adept 2 Runtime + Utilities installed → https://digilent.com/reference/software/adept/start
-- FPGA `.bit` image file for your USRP model/version
+Download pre-compiled standalone binaries from [GitHub Releases](https://github.com/tcasaniv/usrp-manager/releases) for:
+- Windows (`x86_64`)
+- Linux (`x86_64` & `aarch64`)
+- macOS (`x86_64` & Apple Silicon `aarch64`)
 
----
-
-## 🏗 Build from Source
+Or compile from source:
 
 ```bash
-git clone https://github.com/tcasaniv/usrp-manager
+git clone https://github.com/tcasaniv/usrp-manager.git
 cd usrp-manager
-cargo build --release
-./target/release/usrp-manager
+cargo run --release
 ```
-
-Requires: Rust 1.70+
 
 ---
 
-## 📁 Multi-Version UHD (Windows)
+## ⚙️ Requirements
 
-Installed versions go in:
-```
-C:\Program Files\UHD_versions\
-  UHD-4.8\
-  UHD-4.10\
-  UHD-4.11\
-```
-
-Use **Manage UHD Drivers → Switch active version** to update `PATH`.
-
-## 📁 Multi-Version UHD (Linux)
-
-Installed versions go in:
-```
-/opt/uhd/
-  uhd-4.8/
-  uhd-4.10/
-  uhd-4.11/
-```
-
-Registered via `update-alternatives` and `~/.bashrc` env vars.
-
----
-
-## 📄 License
-
-MIT © [tcasaniv](https://github.com/tcasaniv)
+- **UHD**: Recommended for hardware discovery and network flashing (`uhd_find_devices`, `uhd_usrp_probe`, `uhd_image_loader`).
+- **Digilent Adept Utilities** (`djtgcfg`): Required only for hardware unbricking via USB JTAG cables.

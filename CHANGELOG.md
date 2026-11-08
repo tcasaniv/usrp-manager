@@ -7,13 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-07
+
+### Added
+- **Zero-Assumption Guided Flashing Wizard**: Step-by-step interactive assistant for permanent network flashing (`uhd_image_loader`). Features clear explanations of volatile RAM vs permanent flash, device discovery, model selection (N210, X300/X310, N300/N310, E310), FPGA image variant explanations (`HG` 1G/10G vs `XG` dual 10G), explicit command preview (`● <cmd>`), and confirmation.
+- **Physical Guidance for JTAG Recovery**: Contextual unbrick assistant explaining safe boot modes per hardware model, including the internal **S2 recovery button** for USRP N200/N210, JTAG pinouts, and front-panel micro-USB JTAG connections on USRP X300/X310.
+- **Automatic Image Extraction Flattening**: Top-level directory redundancy in GitHub zip packages is now automatically stripped upon extraction, placing all `.bit`/`.bin` files directly in `fpga-images/uhd-images_<version>/`.
+- **Educational Onboarding**: Plain-language explanations in Spanish and English for what FPGAs do, why images differ, and how antenna RF reflections can damage hardware without proper loads.
+
+### Fixed
+- **Menu Index Navigation**: Fixed off-by-one and mismatch index issues in `images_menu` (where *Back* previously showed local images and *View Images* went back) and `settings_menu` (restoring proper alignment for directory selectors and back option).
+- **Subdirectory Duplication**: Resolved nested folders during FPGA image downloads (`uhd-images_x.y.z/uhd-images_x.y.z`).
+- **Comprehensive Localization**: Cleaned and validated UTF-8 locales in English and Spanish ensuring no unlocalized keys or broken encoding appear across probe, diagnostic, or education views.
+
+---
+
 ## [0.2.0] - 2026-11-06
 
 ### Added
 - **Multi-version UHD Detection & Quick Switcher**: System Diagnostic now scans `config.uhd_versions_dir` (e.g. `C:\Program Files\UHD_versions` or `/opt/uhd/`), displays all detected versions with active marks, and prompts the user to switch the active UHD version directly on the spot.
 - **Probe USRP Menu ("📡 Probar USRP / Test USRP")**: Dedicated interactive menu replacing manual runs of `uhd_find_devices` and `uhd_usrp_probe`. Automatically detects connected devices, allows manual IP/args input (`addr=192.168.10.2`), prints the exact command executed, and summarizes daughterboards, frequencies, channels, and serial numbers with optional full raw output display.
 - **Host Network NIC Assistant**: In Diagnostic, if no USRP is detected over Ethernet, actionable network hints and exact commands (`netsh` on Windows, `ip addr` on Linux) are presented to guide setting the host PC to `192.168.10.1`.
-- **Full Educational Internationalization**: Migrated all 8 educational topics to complete bilingual localization in English (`en.yml`) and Spanish (`es.yml`).
 
 ### Fixed
 - **FPGA Images Multi-line SHA-256 Verification**: Fixed checksum validation failure on GitHub release assets where `.sha256` files contain entries for `.tar.gz`, `.tar.xz`, and `.zip`. The parser now searches for the exact asset filename.
@@ -24,40 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2026-11-05
 
 ### Added
+- **Interactive CLI menus** using `dialoguer` for all major workflows.
+- **JTAG unbrick & Network flash flows**.
+- **Multi-version UHD management** on Windows, Linux and macOS.
+- **Bilingual i18n support** (English and Spanish).
+- **GitHub Actions matrix CI/CD** with standalone binary releases for 5 targets.
 
-- **Interactive CLI menus** using `dialoguer` for all major workflows
-- **JTAG unbrick** flow: auto-detect `djtgcfg`, enumerate devices, program bitstream
-- **Network flash** flow: ping device, probe with `uhd_find_devices`, flash over Ethernet
-- **FPGA image management**: browse GitHub Releases, download with progress bar, SHA-256 verification, local cache
-- **UHD driver management** (multi-version):
-  - Windows: NSIS installer download, registry PATH switching via `winreg`
-  - Linux: apt/dnf/pacman package managers, CMake build from source, `update-alternatives` integration
-  - macOS: Homebrew install, CMake build from source, `~/.zprofile` PATH management
-- **System diagnostics**: OS detection, admin/root check, active UHD detection, installed versions listing
-- **Educational content**: 8 topics covering USRP hardware, UHD architecture, FPGA/JTAG concepts, RF fundamentals, lab troubleshooting
-- **Internationalization (i18n)**: English (default) and Spanish via `rust-i18n v3`; language selectable in Settings
-- **Settings menu**: language, images cache directory, UHD versions directory — persisted as JSON in platform config dir
-- **Command visibility**: every external command shown with `● cmd args` (yellow) + live output + exit code
-- **GitHub Actions CI**: Build & Clippy matrix on ubuntu-latest / windows-latest / macos-latest
-- **GitHub Actions Release**: cross-compiled binaries for 5 targets on `v*` tag push:
-  - `x86_64-unknown-linux-gnu`
-  - `aarch64-unknown-linux-gnu`
-  - `x86_64-apple-darwin`
-  - `aarch64-apple-darwin`
-  - `x86_64-pc-windows-msvc`
-
-### Dependencies
-
-- `dialoguer 0.11` with fuzzy-select feature
-- `rust-i18n 3`
-- `reqwest 0.12` (blocking + json)
-- `indicatif 0.17` (progress bars)
-- `console 0.15` (colored output)
-- `zip 2`, `sha2 0.10`, `hex 0.4` (image verification)
-- `which 6`, `dirs 5`, `anyhow 1`, `thiserror 2`
-- `winreg 0.52` (Windows only)
-- `libc 0.2` (Linux/macOS only)
-
-[Unreleased]: https://github.com/tcasaniv/usrp-manager/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/tcasaniv/usrp-manager/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/tcasaniv/usrp-manager/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/tcasaniv/usrp-manager/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tcasaniv/usrp-manager/releases/tag/v0.1.0

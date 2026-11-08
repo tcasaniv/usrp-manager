@@ -7,7 +7,7 @@ use std::path::Path;
 /// Download a file from `url` to `dest`, showing a progress bar.
 pub fn download_with_progress(url: &str, dest: &Path, name: &str) -> Result<()> {
     let client = reqwest::blocking::Client::builder()
-        .user_agent("usrp-manager/0.1")
+        .user_agent("usrp-manager/0.2")
         .timeout(std::time::Duration::from_secs(300))
         .build()?;
 
@@ -60,15 +60,55 @@ pub fn verify_sha256(file: &Path, expected_hex: &str) -> bool {
     actual.eq_ignore_ascii_case(expected_hex.trim())
 }
 
-/// Extract a zip file to a destination directory.
+/// Extract a zip file to a destination directory, flattening top-level redundant directory if present.
 pub fn extract_zip(zip_path: &Path, dest_dir: &Path) -> Result<()> {
     std::fs::create_dir_all(dest_dir)?;
     let file = std::fs::File::open(zip_path)?;
     let mut archive = zip::ZipArchive::new(file)?;
 
+    // Check if all files share a common single root directory
+    let common_prefix = if !archive.is_empty() {
+        let first_name = archive.by_index(0)?.name().to_string();
+        if let Some((root, _)) = first_name.split_once('/') {
+            let prefix = format!("{}/", root);
+            let mut all_match = true;
+            for i in 1..archive.len() {
+                let name = archive.by_index(i)?.name().to_string();
+                if !name.starts_with(&prefix) {
+                    all_match = false;
+                    break;
+                }
+            }
+            if all_match {
+                Some(prefix)
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     for i in 0..archive.len() {
         let mut entry = archive.by_index(i)?;
-        let entry_path = dest_dir.join(entry.name());
+        let name = entry.name();
+
+        let stripped_name = if let Some(ref prefix) = common_prefix {
+            if name == prefix.as_str() {
+                continue;
+            }
+            name.strip_prefix(prefix).unwrap_or(name)
+        } else {
+            name
+        };
+
+        if stripped_name.is_empty() {
+            continue;
+        }
+
+        let entry_path = dest_dir.join(stripped_name);
 
         if entry.is_dir() {
             std::fs::create_dir_all(&entry_path)?;

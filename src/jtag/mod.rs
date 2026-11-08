@@ -1,254 +1,209 @@
 use crate::config::AppConfig;
-use crate::detection::jtag::{self, FpgaModel};
-use crate::detection::system::OsType;
-use crate::images::local::{find_bitstream_in_set, list_local_images};
-use crate::ui::prompts::{confirm, select_str};
-use crate::ui::styles::{err, info, ok, press_enter, print_section, step, warn};
+use crate::detection::jtag::{self, find_djtgcfg};
+use crate::executor::run_visible;
+use crate::images::local::list_local_images;
+use crate::ui::prompts::{confirm, input, select_str};
+use crate::ui::styles::{dim, err, info, ok, press_enter, print_section, step, warn};
+use console::style;
 use rust_i18n::t;
 
 pub fn run_jtag_unbrick(config: &AppConfig) {
     print_section(&t!("jtag.title"));
-    println!("  {}", t!("jtag.intro").replace("\\n", "\n  "));
-    println!();
+    println!(
+        "\n  {}\n  Si un flasheo previo se interrumpió o la imagen se corrompió, el USRP no puede arrancar por sí solo,\n  quedando sin LEDs o sin responder a la red. Esto NO daña el hardware: la FPGA se puede revivir por JTAG.\n",
+        style("● ¿Qué significa que tu USRP esté brickeado?").cyan().bold()
+    );
+    println!(
+        "  {}\n  El cable USB JTAG programa la FPGA directamente en memoria volátil (RAM). El equipo volverá a encender\n",
+        style("● ¿Cómo funciona la recuperación por JTAG?").cyan().bold()
+    );
 
-    // 1. Find djtgcfg
+    // 1. Check Digilent Adept Utilities
     step(&t!("diagnostic.checking_jtag"));
-    let djtgcfg = match jtag::find_djtgcfg() {
+    let djtgcfg = match find_djtgcfg() {
         Some(p) => {
-            ok(&format!("{} ({})", t!("jtag_found"), p.display()));
+            ok(&format!("Herramienta Digilent encontrada: {}", p.display()));
             p
         }
         None => {
             err(&t!("jtag.no_djtgcfg"));
             println!();
             info(&t!("jtag.install_guide_title"));
-            let os = crate::detection::system::get_os();
-            match os {
-                OsType::Windows => {
-                    println!();
-                    for line in t!("jtag.install_guide_win").lines() {
-                        println!("    {}", line);
-                    }
-                }
-                OsType::Linux => {
-                    println!();
-                    for line in t!("jtag.install_guide_linux").lines() {
-                        println!("    {}", line);
-                    }
-                }
-                OsType::MacOs => {
-                    println!();
-                    for line in t!("jtag.install_guide_mac").lines() {
-                        println!("    {}", line);
-                    }
-                }
-                OsType::Other => {}
-            }
+            dim("  1. Descarga 'Digilent Adept Runtime' y 'Adept Utilities' desde digilent.com");
+            dim("  2. Instálalas y vuelve a ejecutar usrp-manager.");
             press_enter();
             return;
         }
     };
 
-    // 2. Enumerate JTAG devices
-    step(&t!("jtag.enumerating"));
-    let devices = jtag::enumerate(&djtgcfg);
-
-    if devices.is_empty() {
-        err(&t!("jtag.no_devices").replace("\\n", "\n  "));
-        press_enter();
-        return;
-    }
-
-    // 3. Select device (if multiple)
-    let device_name = if devices.len() == 1 {
-        devices[0].name.clone()
-    } else {
-        let items: Vec<String> = devices
-            .iter()
-            .map(|d| format!("{} — {} [{}]", d.name, d.product, d.serial))
-            .collect();
-        let idx = match select_str(&t!("jtag.select_device"), &items) {
-            Ok(i) => i,
-            Err(_) => return,
-        };
-        devices[idx].name.clone()
-    };
-
-    // 4. Init + detect FPGA model
-    step(&t!("jtag.initializing"));
-    let fpga_model = match jtag::init_and_detect(&djtgcfg, &device_name) {
-        Some(m) => {
-            match &m {
-                FpgaModel::Unknown(id) => {
-                    warn(&t!("jtag.fpga_unknown", id = id));
-                    press_enter();
-                    return;
-                }
-                _ => {
-                    ok(&t!(
-                        "jtag.fpga_detected",
-                        fpga = m.fpga_name(),
-                        usrp = m.usrp_model()
-                    ));
-                }
-            }
-            m
-        }
-        None => {
-            err("Failed to initialize JTAG scan chain.");
-            warn(&t!("jtag.already_bricked_tip"));
-            press_enter();
-            return;
-        }
-    };
-
-    let usrp_model = fpga_model.usrp_model().to_string();
-
-    // 5. Select FPGA variant
-    let variants = vec![
-        t!("jtag.variant_hg").to_string(),
-        t!("jtag.variant_xg").to_string(),
+    // 2. Step-by-Step Model Guide with Physical Instructions
+    println!();
+    println!(
+        "  {}\n  Selecciona el modelo de tu USRP para ver cómo conectarlo:",
+        style("● Instrucciones Físicas por Modelo").cyan().bold()
+    );
+    let model_options = vec![
+        "USRP N200 / N210 (Botón S2 / Modo Seguro)".to_string(),
+        "USRP X300 / X310 (Conector micro-USB frontal JTAG)".to_string(),
+        "USRP B200 / B210 (Carga automática por USB 3.0)".to_string(),
+        t!("common.back").to_string(),
     ];
-    let variant_idx = match select_str(&t!("jtag.select_variant"), &variants) {
+    let model_idx = match select_str("Selecciona tu modelo:", &model_options) {
         Ok(i) => i,
         Err(_) => return,
     };
-    let variant = if variant_idx == 0 { "HG" } else { "XG" };
+    if model_idx >= model_options.len() - 1 {
+        return;
+    }
 
-    // 6. Find bitstream
-    let local_images = list_local_images(&config.images_cache_dir);
-
-    // Also check the well-known Downloads folder
-    let downloads_images = find_in_downloads(&usrp_model, variant);
-
-    let bitfile = select_bitstream(config, &local_images, &usrp_model, variant, &downloads_images);
-
-    let bitfile = match bitfile {
-        Some(b) => b,
-        None => {
-            err(&t!("jtag.no_bitstream"));
-            info("Go to 'Manage FPGA Images' to download one.");
+    match model_idx {
+        0 => {
+            println!();
+            println!("{}", style("─── PROCEDIMIENTO DE MODO SEGURO (N200 / N210) ───").yellow().bold());
+            println!("  1. Apaga el USRP N210 desconectando el conector de alimentación.");
+            println!("  2. {}", style("Mantén presionado el botón S2").bold());
+            println!("     (pequeño pulsador junto a los LEDs o en la placa interna) mientras conectas la corriente.");
+            println!("  3. Esto fuerza al USRP a arrancar con una imagen segura de respaldo en IP 192.168.10.2.");
+            println!("  4. Si aún así no responde, conecta el cable Digilent USB JTAG al puerto JTAG de 6 pines.");
+            println!("{}", style("──────────────────────────────────────────────────").yellow());
+            println!();
+        }
+        1 => {
+            println!();
+            println!("{}", style("─── PROCEDIMIENTO JTAG PARA X300 / X310 ───").yellow().bold());
+            println!("  1. Conecta un cable USB estándar al puerto micro-USB frontal etiquetado como 'JTAG'.");
+            println!("  2. Enciende el equipo con el interruptor de encendido.");
+            println!("  3. Los adaptadores FTDI / Digilent integrados serán detectados automáticamente por el sistema.");
+            println!("{}", style("────────────────────────────────────────────").yellow());
+            println!();
+        }
+        2 => {
+            println!();
+            info("El USRP B200/B210 no utiliza JTAG externo: carga su FPGA dinámicamente mediante el bus USB 3.0.");
+            dim("Si no es detectado, prueba otro cable USB 3.0 o conéctalo a un puerto directo de la placa madre.");
             press_enter();
             return;
         }
-    };
-
-    // 7. Confirm + program
-    info(&format!(
-        "Bitstream: {}",
-        bitfile.file_name().unwrap_or_default().to_string_lossy()
-    ));
-    println!();
-    match confirm(&t!("jtag.programming"), true) {
-        Ok(true) => {}
         _ => return,
     }
 
-    step(&t!("jtag.programming"));
-    let success = jtag::program(&djtgcfg, &device_name, &bitfile);
-
-    if success {
-        ok(&t!("jtag.success"));
+    // 3. Enumerate JTAG devices
+    step("Detectando cables y dispositivos JTAG conectados...");
+    let devices = jtag::enumerate(&djtgcfg);
+    let chosen_device = if devices.is_empty() {
+        warn("No se detectó ningún programador Digilent JTAG por USB.");
+        dim("Verifica que el cable USB JTAG esté conectado y los drivers instalados.");
         println!();
-        info(&t!("jtag.success_detail").replace("\\n", "\n  "));
-        println!();
-
-        // 8. Offer permanent flash
-        if let Ok(true) = confirm(&t!("jtag.offer_permanent"), true) {
-            crate::flash::run_flash_network(config);
+        if let Ok(true) = confirm("¿Deseas ingresar el nombre del dispositivo JTAG manualmente? (ej. JtagHs2)", false) {
+            match input("Nombre del dispositivo JTAG:", Some("JtagHs2")) {
+                Ok(d) if !d.trim().is_empty() => d.trim().to_string(),
+                _ => return,
+            }
+        } else {
+            press_enter();
+            return;
         }
     } else {
-        err("JTAG programming failed.");
-        warn(&t!("jtag.already_bricked_tip"));
-        press_enter();
-    }
-}
-
-pub fn find_in_downloads_pub(usrp_model: &str, variant: &str) -> Vec<std::path::PathBuf> {
-    find_in_downloads(usrp_model, variant)
-}
-
-fn find_in_downloads(usrp_model: &str, variant: &str) -> Vec<std::path::PathBuf> {
-    let mut found = Vec::new();
-    if let Some(home) = dirs::home_dir() {
-        let downloads = home.join("Downloads");
-        scan_for_bit(&downloads, usrp_model, variant, &mut found);
-    }
-    found
-}
-
-fn scan_for_bit(
-    dir: &std::path::Path,
-    usrp_model: &str,
-    variant: &str,
-    result: &mut Vec<std::path::PathBuf>,
-) {
-    let expected = format!(
-        "usrp_{}_fpga_{}.bit",
-        usrp_model.to_lowercase(),
-        variant.to_uppercase()
-    );
-    if let Ok(entries) = std::fs::read_dir(dir) {
-        for entry in entries.flatten() {
-            let p = entry.path();
-            if p.is_dir() {
-                scan_for_bit(&p, usrp_model, variant, result);
-            } else if p
-                .file_name()
-                .map(|n| n.to_string_lossy().to_lowercase() == expected)
-                .unwrap_or(false)
-            {
-                result.push(p);
-            }
-        }
-    }
-}
-
-fn select_bitstream(
-    _config: &AppConfig,
-    local_images: &[crate::images::local::LocalImageSet],
-    usrp_model: &str,
-    variant: &str,
-    extra_paths: &[std::path::PathBuf],
-) -> Option<std::path::PathBuf> {
-    let mut options: Vec<String> = Vec::new();
-    let mut paths: Vec<std::path::PathBuf> = Vec::new();
-
-    // From managed cache
-    for img_set in local_images {
-        if let Some(bf) = find_bitstream_in_set(img_set, usrp_model, variant) {
-            options.push(format!(
-                "[cache v{}]  {}",
-                img_set.version,
-                bf.file_name().unwrap_or_default().to_string_lossy()
-            ));
-            paths.push(bf);
-        }
-    }
-
-    // From Downloads / auto-found paths
-    for p in extra_paths {
-        let display = format!("[found]  {}", p.display());
-        if !paths.contains(p) {
-            options.push(display);
-            paths.push(p.clone());
-        }
-    }
-
-    if options.is_empty() {
-        return None;
-    }
-
-    options.push(t!("common.back").to_string());
-
-    let idx = match select_str(&t!("jtag.select_bitstream"), &options) {
-        Ok(i) => i,
-        Err(_) => return None,
+        ok(&format!("Programador detectado: {}", devices[0].name));
+        devices[0].name.clone()
     };
 
-    if idx == options.len() - 1 {
-        return None;
+    // 4. Initialize Scan Chain
+    step(&format!("Inicializando cadena JTAG en {}...", chosen_device));
+    let chain = jtag::init_and_detect(&djtgcfg, &chosen_device);
+    if let Some(fpga) = chain {
+        ok(&format!("FPGA detectada en la cadena JTAG: {:?}", fpga));
+    } else {
+        warn("No se pudo identificar la FPGA en la cadena JTAG, pero puedes intentar programarla de todos modos.");
     }
 
-    paths.get(idx).cloned()
+    // 5. Select bitstream image to load
+    let local_sets = list_local_images(&config.images_cache_dir);
+    let chosen_bitfile = if local_sets.is_empty() {
+        warn("No tienes imágenes descargadas en la caché local.");
+        dim("  Descarga imágenes primero desde 'Gestionar imágenes FPGA'.");
+        match input("Ruta completa al archivo .bit a cargar:", None) {
+            Ok(p) => p,
+            Err(_) => return,
+        }
+    } else {
+        let mut bits = Vec::new();
+        for set in &local_sets {
+            for b in &set.bitfiles {
+                let fname = b.file_name().unwrap_or_default().to_string_lossy();
+                if fname.ends_with(".bit") {
+                    bits.push(b.display().to_string());
+                }
+            }
+        }
+        if bits.is_empty() {
+            match input("Ruta completa al archivo .bit:", None) {
+                Ok(p) => p,
+                Err(_) => return,
+            }
+        } else {
+            bits.push("📁 Ingresar ruta de archivo manualmente...".to_string());
+            bits.push(t!("common.back").to_string());
+            let s_idx = match select_str("Selecciona la imagen (.bit) para revivir la FPGA:", &bits) {
+                Ok(i) => i,
+                Err(_) => return,
+            };
+            if s_idx == bits.len() - 1 {
+                return;
+            } else if s_idx == bits.len() - 2 {
+                match input("Ruta completa al archivo .bit:", None) {
+                    Ok(p) => p,
+                    Err(_) => return,
+                }
+            } else {
+                bits[s_idx].clone()
+            }
+        }
+    };
+
+    // 6. Build command and show to user
+    let djtg_str = djtgcfg.to_str().unwrap_or("djtgcfg");
+    println!();
+    println!("{}", style("──────────────────────── RESUMEN DE DESBRICKEO JTAG ────────────────────────").cyan());
+    println!("  Dispositivo:  {}", chosen_device);
+    println!("  Archivo .bit: {}", chosen_bitfile);
+    println!("  Comando CLI que se ejecutará:");
+    println!(
+        "  {}",
+        style(format!("● {} prog -d \"{}\" -i 0 -f \"{}\"", djtg_str, chosen_device, chosen_bitfile))
+            .yellow()
+            .bold()
+    );
+    println!("{}", style("────────────────────────────────────────────────────────────────────────────").cyan());
+    println!();
+
+    match confirm("¿Deseas programar la FPGA ahora por JTAG?", true) {
+        Ok(true) => {
+            step("Programando FPGA vía JTAG... No desconectes cables.");
+            let res = run_visible(
+                djtg_str,
+                &["prog", "-d", &chosen_device, "-i", "0", "-f", &chosen_bitfile],
+            );
+            if res.success {
+                ok("¡Programación JTAG completada exitosamente!");
+                println!();
+                println!(
+                    "  {}\n  La FPGA ahora está ejecutando la imagen en memoria RAM volátil. Los LEDs deberían haber encendido.\n",
+                    style("ESTADO ACTUAL:").green().bold()
+                );
+                if let Ok(true) = confirm("¿Deseas proceder ahora a flashearlo permanentemente por Red?", true) {
+                    crate::flash::run_flash_network(config);
+                    return;
+                }
+            } else {
+                err("La programación JTAG falló.");
+                dim("Verifica que el cable esté firmemente conectado y el USRP encendido.");
+            }
+        }
+        _ => {
+            info("Operación cancelada.");
+        }
+    }
+
+    press_enter();
 }
