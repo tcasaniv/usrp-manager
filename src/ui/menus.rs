@@ -481,9 +481,9 @@ fn drivers_install_linux(config: &AppConfig, version: &str) {
 
     let mut methods = vec![];
     if pm != crate::drivers::linux::PackageManager::None {
-        methods.push(t!("drivers.method_package").to_string());
+        methods.push(format!("{} (Recomendado - Rápido, ~10s)", t!("drivers.method_package")));
     }
-    methods.push(t!("drivers.method_build").to_string());
+    methods.push(format!("{} (Lento, ~30-60 min, alto uso de RAM/CPU)", t!("drivers.method_build")));
     methods.push(t!("common.back").to_string());
 
     let idx = match select_str(&t!("drivers.select_method"), &methods) {

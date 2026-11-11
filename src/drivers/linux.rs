@@ -155,7 +155,15 @@ pub fn build_from_source(tag: &str, prefix: &Path) -> Result<()> {
             bail!("Missing build tools ({}) and no package manager found. Install them manually.", missing_str);
         }
     }
-    let tmp = std::env::temp_dir().join(format!("uhd-build-{}", tag));
+    // Use /var/tmp or user cache on Linux instead of /tmp (which is tmpfs in RAM and limited)
+    let tmp = if std::path::Path::new("/var/tmp").exists() {
+        std::path::PathBuf::from("/var/tmp").join(format!("uhd-build-{}", tag))
+    } else {
+        dirs::cache_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("/tmp"))
+            .join("usrp-manager")
+            .join(format!("uhd-build-{}", tag))
+    };
     std::fs::create_dir_all(&tmp)?;
 
     let repo_dir = tmp.join("uhd-src");
@@ -212,10 +220,38 @@ pub fn build_from_source(tag: &str, prefix: &Path) -> Result<()> {
 
 #[cfg(target_os = "linux")]
 fn num_cpus() -> String {
-    crate::executor::run_silent("nproc", &[])
-        .unwrap_or_else(|| "4".to_string())
-        .trim()
-        .to_string()
+    let cores: usize = crate::executor::run_silent("nproc", &[])
+        .and_then(|s| s.trim().parse().ok())
+        .unwrap_or(4);
+
+    // Read total RAM from /proc/meminfo in kB to avoid OOM crashes (each g++ compiler worker needs ~1.5 - 2.0 GB)
+    let ram_gb = std::fs::read_to_string("/proc/meminfo")
+        .ok()
+        .and_then(|meminfo| {
+            for line in meminfo.lines() {
+                if line.starts_with("MemTotal:") {
+                    let parts: Vec<&str> = line.split_whitespace().collect();
+                    if parts.len() >= 2 {
+                        if let Ok(kb) = parts[1].parse::<usize>() {
+                            return Some(kb / (1024 * 1024));
+                        }
+                    }
+                }
+            }
+            None
+        })
+        .unwrap_or(8);
+
+    // Allocate at most 1 worker per 2 GB of RAM, capped by available CPU cores and a minimum of 1
+    let safe_by_ram = (ram_gb / 2).max(1);
+    let safe_workers = cores.min(safe_by_ram);
+
+    eprintln!(
+        "  [36m● Parallel build jobs:[0m {} (CPU cores: {}, Available RAM: ~{} GB - limited to prevent OOM)",
+        safe_workers, cores, ram_gb
+    );
+
+    safe_workers.to_string()
 }
 
 #[cfg(target_os = "linux")]

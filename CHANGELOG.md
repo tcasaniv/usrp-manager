@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-11-11
+
+### Added
+- **Intelligent RAM-Aware Concurrency Control**: Fixed catastrophic WSL/Linux crashes during UHD source compilation caused by OOM when running `make -j <all_cores>`. Workers are now automatically capped via `min(cores, ram_gb / 2)`, preventing kernel panic and WSL VM crashes.
+- **Persistent Storage Compilation**: Moved build root from `/tmp` (which is RAM-backed `tmpfs` on Linux/WSL) to `/var/tmp` / user cache on disk, avoiding RAM exhaustion and permissions collisions.
+- **Clear Installation Guidance**: Highlighted package manager (`apt`) installation as the recommended fast method (~10 seconds) versus source compilation (~30-60 min).
+
+---
+
 ## [0.2.3] - 2026-11-11
 
 ### Fixed
