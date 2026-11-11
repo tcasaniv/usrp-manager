@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-11-11
+
+### Fixed
+- **Source Build Working Directory**: Fixed `cmake`, `make`, and `sudo make install` execution directory in Linux and macOS by introducing `run_visible_in_dir`. Previously, `cmake ..` executed in the user's current directory instead of `uhd-src/host/build`, resulting in CMake looking for `CMakeLists.txt` in `/home`.
+
+---
+
 ## [0.2.2] - 2026-11-10
 
 ### Added

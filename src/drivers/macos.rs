@@ -4,7 +4,7 @@ use anyhow::{bail, Result};
 use std::path::{Path, PathBuf};
 
 #[cfg(target_os = "macos")]
-use crate::executor::run_visible;
+use crate::executor::{run_visible, run_visible_in_dir};
 
 #[cfg(target_os = "macos")]
 pub fn install_via_brew() -> Result<()> {
@@ -46,24 +46,25 @@ pub fn build_from_source(tag: &str, prefix: &Path) -> Result<()> {
     let build_dir = host_dir.join("build");
     std::fs::create_dir_all(&build_dir)?;
 
-    let r = run_visible(
+    let r = run_visible_in_dir(
         "cmake",
         &[
             "..",
             &format!("-DCMAKE_INSTALL_PREFIX={}", prefix.display()),
             "-DCMAKE_BUILD_TYPE=Release",
         ],
+        &build_dir,
     );
     if !r.success {
         bail!("cmake configure failed");
     }
 
-    let r = run_visible("make", &["-j", "4"]);
+    let r = run_visible_in_dir("make", &["-j", "4"], &build_dir);
     if !r.success {
         bail!("make failed");
     }
 
-    let r = run_visible("sudo", &["make", "install"]);
+    let r = run_visible_in_dir("sudo", &["make", "install"], &build_dir);
     if !r.success {
         bail!("make install failed");
     }
