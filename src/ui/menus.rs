@@ -27,7 +27,7 @@ pub fn main_menu(config: &mut AppConfig) {
 
         let items = vec![
             t!("menu.diagnostic").to_string(),
-            "??  Probar USRP (Probe & Hardware)".to_string(),
+            t!("menu.probe").to_string(),
             t!("menu.jtag_unbrick").to_string(),
             t!("menu.flash_network").to_string(),
             t!("menu.manage_images").to_string(),

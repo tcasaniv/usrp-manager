@@ -57,7 +57,104 @@ pub fn install_from_package(pm: &PackageManager) -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
+pub fn check_build_prerequisites() -> Result<Vec<String>> {
+    use which::which;
+    let required = vec!["cmake", "make", "g++", "git"];
+    let missing: Vec<String> = required
+        .iter()
+        .filter(|cmd| which(cmd).is_err())
+        .map(|s| s.to_string())
+        .collect();
+    Ok(missing)
+}
+
+#[cfg(target_os = "linux")]
+pub fn install_build_deps(pm: &PackageManager) -> Result<()> {
+    match pm {
+        PackageManager::Apt => {
+            let r = run_visible("sudo", &[
+                "apt", "install", "-y",
+                "cmake", "build-essential", "g++",
+                "libboost-all-dev", "libusb-1.0-0-dev",
+                "python3-mako", "python3-numpy",
+                "python3-requests", "python3-setuptools",
+                "doxygen",
+            ]);
+            if !r.success {
+                bail!("Failed to install build dependencies via apt");
+            }
+        }
+        PackageManager::Dnf => {
+            let r = run_visible("sudo", &[
+                "dnf", "install", "-y",
+                "cmake", "gcc-c++", "make",
+                "boost-devel", "libusb1-devel",
+                "python3-mako", "python3-numpy",
+                "python3-requests", "python3-docutils",
+                "doxygen",
+            ]);
+            if !r.success {
+                bail!("Failed to install build dependencies via dnf");
+            }
+        }
+        PackageManager::Pacman => {
+            let r = run_visible("sudo", &[
+                "pacman", "-Sy", "--noconfirm",
+                "cmake", "base-devel", "boost",
+                "libusb", "python-mako", "python-numpy",
+                "python-requests", "doxygen",
+            ]);
+            if !r.success {
+                bail!("Failed to install build dependencies via pacman");
+            }
+        }
+        PackageManager::None => {
+            bail!("No supported package manager found to install build dependencies");
+        }
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
 pub fn build_from_source(tag: &str, prefix: &Path) -> Result<()> {
+    // Check build prerequisites before doing anything
+    let missing = check_build_prerequisites()?;
+    if !missing.is_empty() {
+        let missing_str = missing.join(", ");
+        eprintln!();
+        eprintln!("  \x1b[33m⚠  Missing build tools: {}\x1b[0m", missing_str);
+        eprintln!();
+
+        let pm = detect_package_manager();
+        if pm != PackageManager::None {
+            eprintln!("  The following dependencies will be installed automatically:");
+            match &pm {
+                PackageManager::Apt => eprintln!("  \x1b[33m● sudo apt install -y cmake build-essential g++ libboost-all-dev libusb-1.0-0-dev python3-mako ...\x1b[0m"),
+                PackageManager::Dnf => eprintln!("  \x1b[33m● sudo dnf install -y cmake gcc-c++ make boost-devel libusb1-devel python3-mako ...\x1b[0m"),
+                PackageManager::Pacman => eprintln!("  \x1b[33m● sudo pacman -Sy cmake base-devel boost libusb python-mako ...\x1b[0m"),
+                _ => {}
+            }
+            eprintln!();
+
+            let proceed = dialoguer::Confirm::new()
+                .with_prompt("Install build dependencies now?")
+                .default(true)
+                .interact()
+                .unwrap_or(false);
+
+            if proceed {
+                install_build_deps(&pm)?;
+                let still_missing = check_build_prerequisites()?;
+                if !still_missing.is_empty() {
+                    bail!("Still missing after install: {}. Please install them manually.", still_missing.join(", "));
+                }
+            } else {
+                bail!("Cannot build without: {}. Please install them manually and retry.", missing_str);
+            }
+        } else {
+            bail!("Missing build tools ({}) and no package manager found. Install them manually.", missing_str);
+        }
+    }
     let tmp = std::env::temp_dir().join(format!("uhd-build-{}", tag));
     std::fs::create_dir_all(&tmp)?;
 

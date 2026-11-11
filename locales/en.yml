@@ -5,6 +5,7 @@ app:
 menu:
   main_prompt: "What would you like to do?"
   diagnostic: "🔍  System Diagnostic"
+  probe: "📡  Probe USRP (Hardware Info)"
   jtag_unbrick: "⚡  Unbrick via JTAG"
   flash_network: "🌐  Flash FPGA via Network (permanent)"
   manage_images: "📥  Manage FPGA Images"
@@ -153,3 +154,15 @@ common:
   error_occurred: "An error occurred: %{err}"
   no_internet: "No internet connection or GitHub API unavailable."
   not_implemented: "[Not yet implemented in this version]"
+probe:
+  title: "Probe USRP (Hardware & Subdevices)"
+  intro: "Interrogates the USRP device using uhd_usrp_probe to discover motherboard details, subdevices, DSP clocks, sensors, and frontend RF channels."
+  no_uhd: "Neither uhd_find_devices nor uhd_usrp_probe was found in PATH. Please install UHD first via 'Manage UHD Drivers'."
+  scanning: "Detecting connected USRP devices via network and USB..."
+  manual_args_prompt: "Would you like to specify device arguments manually (e.g. addr=192.168.10.2)?"
+  enter_args: "Device arguments:"
+  select_device: "Select USRP device to probe:"
+  running_probe: "Querying hardware specifications..."
+  probe_failed: "Failed to query USRP hardware specifications."
+  summary_title: "Hardware specifications successfully retrieved."
+  show_full_log: "Do you want to inspect the complete hardware dump?"

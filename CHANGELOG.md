@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-11-10
+
+### Added
+- **Linux Build Prerequisites Auto-Detection & Guided Installation**: Before compiling UHD from source on Linux/Ubuntu, `usrp-manager` now detects missing build dependencies (`cmake`, `make`, `g++`, `libboost-all-dev`, `libusb-1.0-0-dev`, `python3-mako`, etc.) and offers to install them automatically with one click instead of failing with an `os error 2`.
+
+### Fixed
+- **Probe Menu Icon & Localization**: Replaced broken fallback glyphs (`??`) with proper satellite emoji `📡` and integrated complete Spanish (`es.yml`) and English (`en.yml`) translations for all probe strings (`probe.title`, `probe.intro`, `probe.no_uhd`, `probe.scanning`, etc.).
+- **Linux Binary Execution Documentation**: Clarified standard Linux binary execution (`./usrp-manager-linux-x86_64`) vs shell script invocation (`bash ./...`).
+
+---
+
 ## [0.2.1] - 2026-11-07
 
 ### Added

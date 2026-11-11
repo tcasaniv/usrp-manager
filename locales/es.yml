@@ -5,6 +5,7 @@ app:
 menu:
   main_prompt: "¿Qué deseas hacer?"
   diagnostic: "🔍  Diagnóstico del sistema"
+  probe: "📡  Probar USRP (Información de Hardware)"
   jtag_unbrick: "⚡  Desbrickear por JTAG"
   flash_network: "🌐  Flashear FPGA por Red (permanente)"
   manage_images: "📥  Gestionar imágenes FPGA"
@@ -153,3 +154,15 @@ common:
   error_occurred: "Se produjo un error: %{err}"
   no_internet: "Sin conexión a internet o la API de GitHub no está disponible."
   not_implemented: "[No implementado en esta versión]"
+probe:
+  title: "Probar USRP (Hardware y Subdispositivos)"
+  intro: "Consulta el dispositivo USRP mediante uhd_usrp_probe para obtener detalles de placa madre, subdispositivos, relojes DSP, sensores y frontends de RF."
+  no_uhd: "No se encontró uhd_find_devices ni uhd_usrp_probe en el PATH. Instala UHD primero desde 'Gestionar drivers UHD'."
+  scanning: "Buscando dispositivos USRP conectados por red o USB..."
+  manual_args_prompt: "¿Deseas especificar los argumentos del dispositivo manualmente (ej. addr=192.168.10.2)?"
+  enter_args: "Argumentos del dispositivo:"
+  select_device: "Selecciona el dispositivo a sondear:"
+  running_probe: "Consultando especificaciones del hardware..."
+  probe_failed: "Falló la consulta de especificaciones del USRP."
+  summary_title: "Especificaciones del hardware obtenidas correctamente."
+  show_full_log: "¿Deseas ver el volcado completo de hardware?"
