@@ -302,9 +302,56 @@ pub fn set_active_version(prefix: &Path) -> Result<()> {
     let pkg_dir = lib_dir.join("pkgconfig");
     let python_dir = lib_dir.join("python3/dist-packages");
 
-    // Write to ~/.bashrc
-    let home = dirs::home_dir().unwrap_or_else(|| PathBuf::from("~"));
-    let bashrc = home.join(".bashrc");
+    // 1. Update dynamic linker cache (/etc/ld.so.conf.d/usrp-manager-uhd.conf + ldconfig)
+    let lib_str = lib_dir.to_str().unwrap_or("");
+    if !lib_str.is_empty() {
+        let conf_content = format!("{}\n", lib_str);
+        let write_ok = if crate::detection::system::is_admin() {
+            std::fs::write("/etc/ld.so.conf.d/usrp-manager-uhd.conf", &conf_content).is_ok()
+        } else {
+            let r = run_visible("sudo", &["sh", "-c", &format!("echo '{}' > /etc/ld.so.conf.d/usrp-manager-uhd.conf", lib_str)]);
+            r.success
+        };
+        if write_ok {
+            let _ = run_visible("sudo", &["ldconfig"]);
+        }
+    }
+
+    // 2. Update alternatives for binaries if installed in /usr/bin
+    let tools = [
+        "uhd_find_devices",
+        "uhd_config_info",
+        "uhd_image_loader",
+        "uhd_usrp_probe",
+    ];
+    for tool in &tools {
+        let path = bin_dir.join(tool);
+        if path.exists() {
+            let _ = run_visible(
+                "sudo",
+                &[
+                    "update-alternatives",
+                    "--set",
+                    tool,
+                    path.to_str().unwrap_or(""),
+                ],
+            );
+        }
+    }
+
+    // 3. Update ~/.bashrc of current user AND SUDO_USER if invoked via sudo
+    let mut target_bashrcs = Vec::new();
+    if let Some(home) = dirs::home_dir() {
+        target_bashrcs.push(home.join(".bashrc"));
+    }
+    if let Ok(sudo_user) = std::env::var("SUDO_USER") {
+        let user_home = PathBuf::from(format!("/home/{}", sudo_user));
+        let user_bashrc = user_home.join(".bashrc");
+        if user_bashrc.exists() && !target_bashrcs.contains(&user_bashrc) {
+            target_bashrcs.push(user_bashrc);
+        }
+    }
+
     let snippet = format!(
         "\n# usrp-manager: active UHD\nexport UHD_DIR=\"{prefix}\"\nexport PATH=\"{bin}:$PATH\"\nexport LD_LIBRARY_PATH=\"{lib}:$LD_LIBRARY_PATH\"\nexport PKG_CONFIG_PATH=\"{pkg}:$PKG_CONFIG_PATH\"\nexport PYTHONPATH=\"{py}:$PYTHONPATH\"\n",
         prefix = prefix.display(),
@@ -314,14 +361,16 @@ pub fn set_active_version(prefix: &Path) -> Result<()> {
         py = python_dir.display(),
     );
 
-    // Remove old usrp-manager block if present
-    let existing = std::fs::read_to_string(&bashrc).unwrap_or_default();
-    let cleaned: String = existing
-        .lines()
-        .skip_while(|l| l.starts_with("# usrp-manager"))
-        .collect::<Vec<_>>()
-        .join("\n");
+    for bashrc in target_bashrcs {
+        let existing = std::fs::read_to_string(&bashrc).unwrap_or_default();
+        let cleaned: Vec<&str> = existing
+            .lines()
+            .filter(|l| !l.starts_with("# usrp-manager") && !l.contains("UHD_DIR") && !l.contains("active UHD"))
+            .collect();
+        let mut new_content = cleaned.join("\n");
+        new_content.push_str(&snippet);
+        let _ = std::fs::write(&bashrc, new_content);
+    }
 
-    std::fs::write(&bashrc, format!("{}\n{}", cleaned, snippet))?;
     Ok(())
 }

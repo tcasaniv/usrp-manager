@@ -181,7 +181,7 @@ pub fn images_menu(config: &AppConfig) {
 
         match idx {
             0 => images_download(config),
-            2 => images_view_local(config),
+            1 => images_view_local(config),
             _ => break,
         }
     }
@@ -359,7 +359,7 @@ pub fn drivers_menu(config: &mut AppConfig) {
 
         match idx {
             0 => drivers_install(config),
-            2 => drivers_activate(config),
+            1 => drivers_activate(config),
             _ => break,
         }
     }
@@ -697,7 +697,7 @@ pub fn settings_menu(config: &mut AppConfig) {
                     }
                 }
             }
-            2 => {
+            1 => {
                 // Images dir
                 if let Ok(new_path) =
                     input(&t!("settings.images_dir"), Some(&config.images_cache_dir.display().to_string()))
@@ -708,7 +708,7 @@ pub fn settings_menu(config: &mut AppConfig) {
                     ok(&t!("settings.saved"));
                 }
             }
-            3 => {
+            2 => {
                 // UHD versions dir
                 if let Ok(new_path) =
                     input(&t!("settings.uhd_versions_dir"), Some(&config.uhd_versions_dir.display().to_string()))

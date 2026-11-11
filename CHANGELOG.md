@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-11-11
+
+### Fixed
+- **Menu Index Alignment**: Fixed match index offsets across `images_menu`, `drivers_menu`, and `settings_menu` where selecting "Change active version" or sub-options previously exited immediately or targeted the wrong action.
+- **Dynamic Linker Configuration (`ldconfig`)**: Activating a UHD version on Linux now automatically registers its library path in `/etc/ld.so.conf.d/usrp-manager-uhd.conf` and runs `ldconfig`, eliminating `error while loading shared libraries: libuhd.so`.
+- **System-Wide & Multi-User Environment Activation**: `set_active_version` on Linux now updates `update-alternatives --set` and targets the real user's `.bashrc` via `SUDO_USER` when run under `sudo`.
+
+---
+
 ## [0.2.4] - 2026-11-11
 
 ### Added
