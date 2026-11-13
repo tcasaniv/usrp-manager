@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.6] - 2026-11-13
+
+### Added
+- **Compile-Time Translation Enforcement (`build.rs`)**: Build now fails immediately with an explicit compile error if any `t!("...")` key is missing from either `locales/en.yml` or `locales/es.yml`. Guarantees zero missing keys reach production binaries.
+- **Complete Education & Guide Translations**: Added all 31 missing education entries (`edu_what_*`, `edu_fpga_*`, `edu_ant_*`, `edu_brick_*`, `edu_models_*`) in both English and Spanish with rich formatting.
+- **Full Bilingual Support for Flash & JTAG Wizards**: Converted all hardcoded prompts and warnings in `src/flash/mod.rs` and `src/jtag/mod.rs` to i18n keys with complete Spanish and English localizations.
+- **UI Menu Polish**: Added translations for administrator privilege checks and goodbye prompts.
+
+---
+
 ## [0.2.5] - 2026-11-11
 
 ### Fixed

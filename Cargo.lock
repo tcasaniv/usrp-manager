@@ -1968,7 +1968,7 @@ dependencies = [
 
 [[package]]
 name = "usrp-manager"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1982,6 +1982,7 @@ dependencies = [
  "rust-i18n",
  "serde",
  "serde_json",
+ "serde_yaml",
  "sha2",
  "thiserror 2.0.21",
  "which",

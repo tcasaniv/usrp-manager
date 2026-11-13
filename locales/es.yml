@@ -1,168 +1,373 @@
 app:
   name: USRP Manager
-  tagline: "Ettus Research USRP SDR — Herramienta de gestión"
-
+  tagline: Ettus Research USRP SDR — Herramienta de gestión
 menu:
-  main_prompt: "¿Qué deseas hacer?"
-  diagnostic: "🔍  Diagnóstico del sistema"
-  probe: "📡  Probar USRP (Información de Hardware)"
-  jtag_unbrick: "⚡  Desbrickear por JTAG"
-  flash_network: "🌐  Flashear FPGA por Red (permanente)"
-  manage_images: "📥  Gestionar imágenes FPGA"
-  manage_drivers: "🛠  Gestionar drivers UHD"
-  education: "📚  Guía / Educación"
-  settings: "⚙   Configuración"
-  exit: "🚪  Salir"
-
+  main_prompt: ¿Qué deseas hacer?
+  diagnostic: 🔍  Diagnóstico del sistema
+  probe: 📡  Probar USRP (Información de Hardware)
+  jtag_unbrick: ⚡  Desbrickear por JTAG
+  flash_network: 🌐  Flashear FPGA por Red (permanente)
+  manage_images: 📥  Gestionar imágenes FPGA
+  manage_drivers: 🛠  Gestionar drivers UHD
+  education: 📚  Guía / Educación
+  settings: ⚙   Configuración
+  exit: 🚪  Salir
+  admin_ok: Ejecutando con privilegios de administrador / root
+  admin_warn: No se está ejecutando como administrador. Algunas operaciones pueden
+    requerir permisos elevados.
+  goodbye: ¡Hasta pronto!
 diagnostic:
   title: Diagnóstico del sistema
-  checking_uhd: "Comprobando instalación de UHD..."
-  uhd_found: "UHD %{version} encontrado"
-  uhd_not_found: "UHD no encontrado — instálalo desde 'Gestionar drivers UHD'"
-  checking_jtag: "Comprobando herramientas JTAG (djtgcfg)..."
-  jtag_found: "djtgcfg encontrado"
-  jtag_not_found: "djtgcfg no encontrado — necesario para desbrickear por JTAG"
-  checking_network: "Buscando USRP en la red..."
-  usrp_found_at: "USRP encontrado en %{ip}"
-  usrp_not_found: "No se detectó ningún USRP en las IPs habituales"
-  version_mismatch: "Desajuste de versiones — UHD %{uhd_ver} vs imagen FPGA %{fpga_ver}"
-  all_ok: "¡Todo listo!"
-  rerun_tip: "Puedes ejecutar esto en cualquier momento desde el menú principal"
-
+  checking_uhd: Comprobando instalación de UHD...
+  uhd_found: UHD %{version} encontrado
+  uhd_not_found: UHD no encontrado — instálalo desde 'Gestionar drivers UHD'
+  checking_jtag: Comprobando herramientas JTAG (djtgcfg)...
+  jtag_found: djtgcfg encontrado
+  jtag_not_found: djtgcfg no encontrado — necesario para desbrickear por JTAG
+  checking_network: Buscando USRP en la red...
+  usrp_found_at: USRP encontrado en %{ip}
+  usrp_not_found: No se detectó ningún USRP en las IPs habituales
+  version_mismatch: Desajuste de versiones — UHD %{uhd_ver} vs imagen FPGA %{fpga_ver}
+  all_ok: ¡Todo listo!
+  rerun_tip: Puedes ejecutar esto en cualquier momento desde el menú principal
 jtag:
-  title: "Desbrickear por JTAG"
-  intro: "Este procedimiento carga una imagen FPGA en RAM a través del cable USB JTAG.\nEl USRP volverá a funcionar (temporal — se borra al apagar).\nDespués deberás flashear la imagen permanentemente por red."
-  no_djtgcfg: "djtgcfg no está instalado."
-  install_guide_title: "Cómo instalar Digilent Adept Utilities:"
-  install_guide_win: "1. Visita: https://digilent.com/reference/software/adept/start\n   2. Descarga 'Adept 2 Runtime' y 'Adept Utilities' para Windows.\n   3. Instala ambos y vuelve a ejecutar usrp-manager."
-  install_guide_linux: "1. Visita: https://digilent.com/reference/software/adept/start\n   2. Descarga los paquetes .deb o .rpm para Linux.\n   3. sudo dpkg -i digilent.adept.runtime_*.deb\n   4. sudo dpkg -i digilent.adept.utilities_*.deb"
-  install_guide_mac: "1. Visita: https://digilent.com/reference/software/adept/start\n   2. Descarga el paquete para macOS e instálalo."
-  enumerating: "Enumerando dispositivos JTAG..."
-  no_devices: "No se encontraron dispositivos JTAG.\n   • Comprueba que el cable USB JTAG está conectado al puerto JTAG del USRP\n   • Comprueba que el USRP está encendido\n   • Prueba con otro cable USB o puerto"
-  select_device: "Selecciona dispositivo JTAG:"
-  initializing: "Inicializando cadena de escaneo JTAG..."
-  fpga_detected: "FPGA detectada: %{fpga} → USRP %{usrp}"
-  fpga_unknown: "FPGA detectada pero modelo no reconocido: %{id}\n   Este modelo de USRP puede no estar soportado todavía."
-  select_variant: "Selecciona variante de FPGA:"
-  variant_hg: "HG — Puerto 0 a 1 Gigabit, Puerto 1 a 10 Gigabit (más común)"
-  variant_xg: "XG — Ambos puertos a 10 Gigabit"
-  select_bitstream: "Selecciona imagen FPGA (archivo .bit):"
-  bitstream_local: "[local]  %{name}"
-  bitstream_download: "[descargar de GitHub]  v%{version} — %{size}"
-  no_bitstream: "No hay imagen FPGA disponible. Descarga una desde 'Gestionar imágenes FPGA'."
-  programming: "Programando FPGA por JTAG. No desconectes los cables..."
-  success: "¡Programación JTAG exitosa!"
-  success_detail: "La FPGA ahora ejecuta la imagen en RAM volátil.\nSe perderá al apagar el USRP."
-  offer_permanent: "¿Flashear esta imagen permanentemente ahora? (recomendado)"
-  already_bricked_tip: "Si falló la programación JTAG, comprueba que el cable USB está en el puerto JTAG (no en el puerto USB3)."
+  title: Desbrickear por JTAG
+  intro: 'Este procedimiento carga una imagen FPGA en RAM a través del cable USB JTAG.
 
+    El USRP volverá a funcionar (temporal — se borra al apagar).
+
+    Después deberás flashear la imagen permanentemente por red.'
+  no_djtgcfg: djtgcfg no está instalado.
+  install_guide_title: 'Cómo instalar Digilent Adept Utilities:'
+  install_guide_win: "1. Visita: https://digilent.com/reference/software/adept/start\n\
+    \   2. Descarga 'Adept 2 Runtime' y 'Adept Utilities' para Windows.\n   3. Instala\
+    \ ambos y vuelve a ejecutar usrp-manager."
+  install_guide_linux: "1. Visita: https://digilent.com/reference/software/adept/start\n\
+    \   2. Descarga los paquetes .deb o .rpm para Linux.\n   3. sudo dpkg -i digilent.adept.runtime_*.deb\n\
+    \   4. sudo dpkg -i digilent.adept.utilities_*.deb"
+  install_guide_mac: "1. Visita: https://digilent.com/reference/software/adept/start\n\
+    \   2. Descarga el paquete para macOS e instálalo."
+  enumerating: Enumerando dispositivos JTAG...
+  no_devices: "No se encontraron dispositivos JTAG.\n   • Comprueba que el cable USB\
+    \ JTAG está conectado al puerto JTAG del USRP\n   • Comprueba que el USRP está\
+    \ encendido\n   • Prueba con otro cable USB o puerto"
+  select_device: 'Selecciona dispositivo JTAG:'
+  initializing: Inicializando cadena de escaneo JTAG...
+  fpga_detected: 'FPGA detectada: %{fpga} → USRP %{usrp}'
+  fpga_unknown: "FPGA detectada pero modelo no reconocido: %{id}\n   Este modelo de\
+    \ USRP puede no estar soportado todavía."
+  select_variant: 'Selecciona variante de FPGA:'
+  variant_hg: HG — Puerto 0 a 1 Gigabit, Puerto 1 a 10 Gigabit (más común)
+  variant_xg: XG — Ambos puertos a 10 Gigabit
+  select_bitstream: 'Selecciona imagen FPGA (archivo .bit):'
+  bitstream_local: '[local]  %{name}'
+  bitstream_download: '[descargar de GitHub]  v%{version} — %{size}'
+  no_bitstream: No hay imagen FPGA disponible. Descarga una desde 'Gestionar imágenes
+    FPGA'.
+  programming: Programando FPGA por JTAG. No desconectes los cables...
+  success: ¡Programación JTAG exitosa!
+  success_detail: 'La FPGA ahora ejecuta la imagen en RAM volátil.
+
+    Se perderá al apagar el USRP.'
+  offer_permanent: ¿Flashear esta imagen permanentemente ahora? (recomendado)
+  already_bricked_tip: Si falló la programación JTAG, comprueba que el cable USB está
+    en el puerto JTAG (no en el puerto USB3).
+  what_is_bricked: ¿Qué significa que tu USRP esté brickeado?
+  what_is_bricked_body: 'Si un flasheo previo se interrumpió o la imagen se corrompió,
+    el USRP no puede arrancar,
+
+    quedando sin LEDs o sin responder a la red. Esto NO daña el hardware:
+
+    la FPGA se puede revivir por JTAG.'
+  how_jtag_works: ¿Cómo funciona la recuperación por JTAG?
+  how_jtag_works_body: 'El cable USB JTAG programa la FPGA directamente en memoria
+    volátil (RAM).
+
+    El equipo volverá a encender de inmediato.'
+  digilent_found: 'Herramienta Digilent encontrada: %{path}'
+  model_instructions_title: Instrucciones Físicas por Modelo
+  select_model_prompt: 'Selecciona el modelo de tu USRP para ver cómo conectarlo:'
+  model_n210_label: USRP N200 / N210 (Botón S2 / Modo Seguro)
+  model_x300_label: USRP X300 / X310 (Conector micro-USB frontal JTAG)
+  model_b200_label: USRP B200 / B210 (Carga automática por USB 3.0)
+  proc_n210_title: PROCEDIMIENTO DE MODO SEGURO (N200 / N210)
+  proc_n210_step1: 1. Apaga el USRP N210 desconectando el conector de alimentación.
+  proc_n210_step2: 2. Mantén presionado el botón S2 mientras conectas la corriente.
+  proc_n210_step3: 3. Esto fuerza al USRP a arrancar con una imagen segura de respaldo
+    en IP 192.168.10.2.
+  proc_n210_step4: 4. Si aún así no responde, conecta el cable Digilent USB JTAG al
+    puerto JTAG de 6 pines.
+  proc_x300_title: PROCEDIMIENTO JTAG PARA X300 / X310
+  proc_x300_step1: 1. Conecta un cable micro-USB estándar al puerto frontal etiquetado
+    como 'JTAG'.
+  proc_x300_step2: 2. Enciende el equipo con el interruptor de encendido.
+  proc_x300_step3: 3. Los adaptadores FTDI / Digilent integrados serán detectados
+    automáticamente por el sistema.
+  b200_info: 'El USRP B200/B210 no utiliza JTAG externo: carga su FPGA dinámicamente
+    mediante el bus USB 3.0.'
+  b200_hint: Si no es detectado, prueba otro cable USB 3.0 o conéctalo a un puerto
+    directo de la placa madre.
+  scanning_jtag: Detectando cables y dispositivos JTAG conectados...
+  no_cables: No se detectó ningún programador Digilent JTAG por USB.
+  check_cable_tip: Verifica que el cable USB JTAG esté conectado y los drivers instalados.
+  manual_device_prompt: ¿Deseas ingresar el nombre del dispositivo JTAG manualmente?
+    (ej. JtagHs2)
+  device_name_input: 'Nombre del dispositivo JTAG:'
+  programmer_detected: 'Programador detectado: %{name}'
+  init_chain: Inicializando cadena JTAG en %{device}...
+  fpga_found_chain: 'FPGA detectada en la cadena JTAG: %{name}'
+  fpga_not_identified: No se pudo identificar la FPGA en la cadena JTAG, pero puedes
+    intentar programarla de todos modos.
+  no_cached_bits: No tienes imágenes descargadas en la caché local.
+  cache_hint: Descarga imágenes primero desde 'Gestionar imágenes FPGA'.
+  enter_bit_path: 'Ruta completa al archivo .bit a cargar:'
+  manual_bit_option: 📁 Ingresar ruta de archivo manualmente...
+  select_bit_prompt: 'Selecciona la imagen (.bit) para revivir la FPGA:'
+  summary_title: RESUMEN DE DESBRICKEO JTAG
+  summary_device: 'Dispositivo:  %{device}'
+  summary_file: 'Archivo .bit: %{path}'
+  summary_cmd: 'Comando CLI que se ejecutará:'
+  confirm_program: ¿Deseas programar la FPGA ahora por JTAG?
+  programming_jtag: Programando FPGA vía JTAG... No desconectes cables.
+  prog_success: ¡Programación JTAG completada exitosamente!
+  status_now: 'ESTADO ACTUAL:'
+  ram_active_notice: La FPGA ahora está ejecutando la imagen en memoria RAM volátil.
+    Los LEDs deberían haber encendido.
+  offer_permanent_flash: ¿Deseas proceder ahora a flashearlo permanentemente por Red?
+  prog_failed: La programación JTAG falló.
+  check_connection_tip: Verifica que el cable esté firmemente conectado y el USRP
+    encendido.
+  op_cancelled: Operación cancelada.
 flash:
-  title: "Flashear FPGA por Red (permanente)"
-  intro: "Escribe la imagen FPGA en la memoria flash interna del USRP.\nPersiste tras apagar el equipo.\nRequiere: cable Ethernet en el puerto SFP0 + configuración IP correcta."
-  no_uhd: "UHD no está instalado o no está en el PATH. Por favor instala UHD primero."
-  enter_ip: "Dirección IP del USRP"
-  pinging: "Haciendo ping a %{ip}..."
-  ping_ok: "USRP accesible en %{ip}"
-  ping_fail: "No se puede alcanzar %{ip}. Posibles causas:"
-  ping_fix1: "  • El cable Ethernet debe estar en el SFP0 (Puerto 0) con un transceptor SFP 1G"
-  ping_fix2: "  • Configura la IP de tu equipo a 192.168.10.1 / máscara 255.255.255.0"
-  ping_fix3: "  • Si el USRP está brickeado (sin LEDs) → usa 'Desbrickear por JTAG' primero"
-  finding: "Detectando USRP con uhd_find_devices..."
-  find_fail: "UHD no puede comunicarse con el USRP.\n   Posible causa: versión de UHD incompatible con la imagen FPGA."
-  mismatch_hint: "Prueba 'Gestionar drivers UHD' para instalar la versión correcta de UHD."
-  select_variant: "Selecciona variante de FPGA a flashear:"
-  confirm_flash: "Esto sobreescribirá permanentemente la flash FPGA interna del USRP. ¿Continuar?"
-  flashing: "Flasheando imagen FPGA. No apagues el USRP..."
-  success: "¡Flash completado! Reinicia el USRP ahora."
-  reboot_reminder: "IMPORTANTE: Apaga el USRP, espera 5 segundos y vuelve a encenderlo."
+  title: Flashear FPGA por Red (permanente)
+  intro: 'Escribe la imagen FPGA en la memoria flash interna del USRP.
 
+    Persiste tras apagar el equipo.
+
+    Requiere: cable Ethernet en el puerto SFP0 + configuración IP correcta.'
+  no_uhd: UHD no está instalado o no está en el PATH. Por favor instala UHD primero.
+  enter_ip: Dirección IP del USRP
+  pinging: Haciendo ping a %{ip}...
+  ping_ok: USRP accesible en %{ip}
+  ping_fail: 'No se puede alcanzar %{ip}. Posibles causas:'
+  ping_fix1: '  • El cable Ethernet debe estar en el SFP0 (Puerto 0) con un transceptor
+    SFP 1G'
+  ping_fix2: '  • Configura la IP de tu equipo a 192.168.10.1 / máscara 255.255.255.0'
+  ping_fix3: '  • Si el USRP está brickeado (sin LEDs) → usa ''Desbrickear por JTAG''
+    primero'
+  finding: Detectando USRP con uhd_find_devices...
+  find_fail: "UHD no puede comunicarse con el USRP.\n   Posible causa: versión de\
+    \ UHD incompatible con la imagen FPGA."
+  mismatch_hint: Prueba 'Gestionar drivers UHD' para instalar la versión correcta
+    de UHD.
+  select_variant: 'Selecciona variante de FPGA a flashear:'
+  confirm_flash: Esto sobreescribirá permanentemente la flash FPGA interna del USRP.
+    ¿Continuar?
+  flashing: Flasheando imagen FPGA. No apagues el USRP...
+  success: ¡Flash completado! Reinicia el USRP ahora.
+  reboot_reminder: 'IMPORTANTE: Apaga el USRP, espera 5 segundos y vuelve a encenderlo.'
+  what_title: ¿En qué consiste el Flasheo Permanente?
+  what_body: 'Este asistente escribe una imagen FPGA en la memoria flash interna (no
+    volátil) del USRP.
+
+    A diferencia de JTAG (que se borra al apagar), la imagen guardada se cargará automáticamente
+    al encender.'
+  caution_unplug: 'PRECAUCIÓN: NO desconectes el cable Ethernet ni apagues el USRP
+    durante el flasheo.'
+  select_conn_mode: ¿Cómo deseas conectar con el USRP?
+  mode_autodetect: 🔍 Autodetectar USRP en la red (uhd_find_devices)
+  mode_manual_ip: ⌨️  Ingresar dirección IP manualmente (ej. 192.168.10.2)
+  scanning_network: Escaneando red con uhd_find_devices...
+  none_detected: No se detectó ningún USRP automáticamente.
+  verify_sfp_tip: Verifica que el cable esté en el puerto SFP0 y tu IP local sea 192.168.10.1.
+  select_detected: 'Selecciona el USRP detectado:'
+  pinging_host: Probando conectividad (ping) con %{ip}...
+  ping_success: USRP responde en %{ip}
+  ping_timeout: El USRP en %{ip} no respondió al ping.
+  bricked_guidance: Si el USRP está brickeado (sin LEDs frontales), primero debes
+    usar 'Desbrickear por JTAG'.
+  continue_anyway: ¿Deseas intentar continuar de todas formas?
+  select_model_title: Selección de Modelo de USRP
+  select_model_prompt: 'Selecciona el modelo de tu USRP:'
+  model_n200: USRP N200 / N210 (Imágenes en formato .bin)
+  model_x300: USRP X300 / X310 (Imágenes en formato .bit, variantes HG o XG)
+  model_n300: USRP N300 / N310 / N320 (Arquitectura HG/XG/AA/WX)
+  model_e310: USRP E310 / E320
+  variant_explanation: ¿Qué significan las variantes de imagen?
+  variant_explanation_body: '• HG (1G/10G): Puerto 0 a 1 Gigabit (RJ45 común), Puerto
+    1 a 10G. (Recomendado)
+
+    • XG (Dual 10G): Ambos puertos SFP+ a 10G (requiere tarjeta 10G en PC).
+
+    • Por defecto / Sin sufijo: Configuración estándar de fábrica para N210.'
+  no_cached_images: No tienes imágenes descargadas en la caché local.
+  cache_hint: Puedes descargarlas en 'Gestionar imágenes FPGA'.
+  enter_image_path: 'Ruta completa al archivo de imagen (.bit o .bin):'
+  manual_file_option: 📁 Ingresar ruta de archivo manualmente...
+  select_image_prompt: 'Selecciona la imagen FPGA que deseas grabar:'
+  summary_title: RESUMEN DE FLASHEO
+  summary_device: 'Dispositivo:  USRP %{model} (%{ip})'
+  summary_file: 'Archivo FPGA: %{path}'
+  summary_cmd: 'Comando CLI que se ejecutará:'
+  confirm_permanent: ¿Estás seguro de que deseas flashear esta imagen permanentemente?
+  executing_flash: Ejecutando flasheo. No apagues el equipo...
+  flash_success: ¡Flasheo completado con éxito!
+  reboot_required: 'IMPORTANTE: Reinicio requerido'
+  reboot_instruction: Apaga el USRP, espera 5 segundos y vuelve a encenderlo para
+    cargar la nueva imagen.
+  flash_error: El proceso de flasheo devolvió un error.
+  verify_uhd_tip: Verifica que la versión de UHD activa sea compatible con el USRP.
+  op_cancelled: Operación cancelada.
 images:
-  title: "Gestionar imágenes FPGA"
-  fetching: "Obteniendo lista de versiones de GitHub..."
-  fetch_fail: "No se pudo obtener las versiones. Comprueba tu conexión a internet."
-  select_action: "¿Qué deseas hacer?"
-  action_download: "Descargar una versión de GitHub"
-  action_view_local: "Ver imágenes descargadas localmente"
-  action_back: "← Volver"
-  select_version: "Selecciona versión de UHD:"
-  local_title: "Imágenes disponibles localmente:"
-  none_local: "No hay imágenes descargadas todavía."
-  download_confirm: "¿Descargar %{name} (%{size})?"
-  downloading: "Descargando %{name}..."
-  verifying: "Verificando checksum..."
-  verify_ok: "Checksum correcto"
-  verify_fail: "¡Verificación de checksum fallida! El archivo puede estar corrupto."
-  extracting: "Extrayendo..."
-  done: "Imágenes listas en %{path}"
-  already_downloaded: "[ya descargado]"
-
+  title: Gestionar imágenes FPGA
+  fetching: Obteniendo lista de versiones de GitHub...
+  fetch_fail: No se pudo obtener las versiones. Comprueba tu conexión a internet.
+  select_action: ¿Qué deseas hacer?
+  action_download: Descargar una versión de GitHub
+  action_view_local: Ver imágenes descargadas localmente
+  action_back: ← Volver
+  select_version: 'Selecciona versión de UHD:'
+  local_title: 'Imágenes disponibles localmente:'
+  none_local: No hay imágenes descargadas todavía.
+  download_confirm: ¿Descargar %{name} (%{size})?
+  downloading: Descargando %{name}...
+  verifying: Verificando checksum...
+  verify_ok: Checksum correcto
+  verify_fail: ¡Verificación de checksum fallida! El archivo puede estar corrupto.
+  extracting: Extrayendo...
+  done: Imágenes listas en %{path}
+  already_downloaded: '[ya descargado]'
 drivers:
-  title: "Gestionar drivers UHD"
-  active: "UHD activo: %{version}"
-  no_active: "No se detectó UHD activo en el PATH"
-  installed_title: "Versiones instaladas:"
-  none_installed: "No se encontraron instalaciones de UHD versionadas."
-  select_action: "¿Qué deseas hacer?"
-  action_install: "Instalar una nueva versión"
-  action_activate: "Cambiar versión activa"
-  action_back: "← Volver"
-  select_method: "Método de instalación:"
-  method_package: "Gestor de paquetes del sistema (apt / dnf / pacman)"
-  method_github_installer: "Descargar instalador de GitHub"
-  method_build: "Compilar desde fuente (clonar GitHub + cmake)"
-  select_version: "Selecciona versión:"
-  install_dir: "Directorio de instalación:"
-  activating: "Activando UHD %{version}..."
-  activate_win: "Actualizando PATH del sistema..."
-  activate_linux: "Actualizando update-alternatives y variables de entorno..."
-  activated: "UHD %{version} ahora está activo. Abre una nueva terminal para aplicar los cambios."
-  building: "Compilando UHD %{version} desde fuente. Esto puede tardar 20-60 minutos..."
-  build_deps_missing: "Faltan dependencias de compilación: %{deps}"
-  build_deps_fix: "Instálalas primero con:"
-  admin_required: "Esta acción requiere privilegios de administrador.\nVuelve a ejecutar usrp-manager como administrador."
-  package_version_note: "Nota: la versión del gestor de paquetes puede diferir de las versiones de GitHub."
+  title: Gestionar drivers UHD
+  active: 'UHD activo: %{version}'
+  no_active: No se detectó UHD activo en el PATH
+  installed_title: 'Versiones instaladas:'
+  none_installed: No se encontraron instalaciones de UHD versionadas.
+  select_action: ¿Qué deseas hacer?
+  action_install: Instalar una nueva versión
+  action_activate: Cambiar versión activa
+  action_back: ← Volver
+  select_method: 'Método de instalación:'
+  method_package: Gestor de paquetes del sistema (apt / dnf / pacman)
+  method_github_installer: Descargar instalador de GitHub
+  method_build: Compilar desde fuente (clonar GitHub + cmake)
+  select_version: 'Selecciona versión:'
+  install_dir: 'Directorio de instalación:'
+  activating: Activando UHD %{version}...
+  activate_win: Actualizando PATH del sistema...
+  activate_linux: Actualizando update-alternatives y variables de entorno...
+  activated: UHD %{version} ahora está activo. Abre una nueva terminal para aplicar
+    los cambios.
+  building: Compilando UHD %{version} desde fuente. Esto puede tardar 20-60 minutos...
+  build_deps_missing: 'Faltan dependencias de compilación: %{deps}'
+  build_deps_fix: 'Instálalas primero con:'
+  admin_required: 'Esta acción requiere privilegios de administrador.
 
+    Vuelve a ejecutar usrp-manager como administrador.'
+  package_version_note: 'Nota: la versión del gestor de paquetes puede diferir de
+    las versiones de GitHub.'
 education:
-  title: "Guía y Educación"
-  select_topic: "Selecciona un tema:"
-  topic_what_usrp: "¿Qué es un USRP? (¿y qué es SDR?)"
-  topic_fpga: "¿Qué es la FPGA y por qué importa la versión?"
-  topic_antennas: "⚠  Antenas: seguridad RF y rangos de frecuencia"
-  topic_bricked: "¿Cómo saber si mi USRP está brickeado?"
-  topic_versions: "¿Qué versión de UHD necesito para mi FPGA?"
-  topic_models: "Modelos USRP: X300, X310, N210, B2xx"
-  topic_n210_guide: "N210 — Guía de flasheo (texto)"
-  topic_back: "← Volver"
-
+  title: Guía y Educación
+  select_topic: 'Selecciona un tema:'
+  topic_what_usrp: ¿Qué es un USRP? (¿y qué es SDR?)
+  topic_fpga: ¿Qué es la FPGA y por qué importa la versión?
+  topic_antennas: '⚠  Antenas: seguridad RF y rangos de frecuencia'
+  topic_bricked: ¿Cómo saber si mi USRP está brickeado?
+  topic_versions: ¿Qué versión de UHD necesito para mi FPGA?
+  topic_models: 'Modelos USRP: X300, X310, N210, B2xx'
+  topic_n210_guide: N210 — Guía de flasheo (texto)
+  topic_back: ← Volver
+  edu_what_title: ¿Qué es un USRP? (¿y qué es SDR?)
+  edu_what_sec1: ● ¿Qué es SDR?
+  edu_what_body1: "  Un USRP (Universal Software Radio Peripheral) es un dispositivo\
+    \ hardware\n  fabricado por Ettus Research (National Instruments / Emerson) que\
+    \ actúa\n  como Radio Definida por Software (SDR)."
+  edu_what_sec2: ● ¿Cómo funciona?
+  edu_what_body2: "  En lugar de circuitos fijos para cada estándar de radio (Wi-Fi,\
+    \ LTE, FM),\n  un SDR utiliza un procesador de propósito general + FPGA para procesar\
+    \ señales\n  por software. Permite: recepción FM/AM, GSM/LTE/5G, radar, satélites\
+    \ y análisis espectral."
+  edu_what_sec3: ● Rol de la FPGA
+  edu_what_body3: "  La FPGA procesa señales digitales en tiempo real (conversión\
+    \ DDC/DUC, filtros,\n  empaquetado) demasiado rápidas para una CPU. La PC ejecuta\
+    \ UHD para controlar\n  el USRP mediante Ethernet o USB."
+  edu_what_sec4: ● Por qué importan las versiones
+  edu_what_body4: "  El driver UHD del host y la imagen FPGA deben ser de versiones\
+    \ compatibles.\n  Si difieren, la comunicación falla y el USRP no puede operar."
+  edu_fpga_title: La FPGA y por qué importa la versión
+  edu_fpga_sec1: ● ¿Qué es la FPGA?
+  edu_fpga_body1: "  FPGA = Field-Programmable Gate Array. Chip reprogramable que\
+    \ ejecuta lógica\n  a velocidad de hardware para muestreo ADC/DAC, filtros y tramas\
+    \ VITA49."
+  edu_fpga_sec2: ● Imagen FPGA (archivo .bit / .bin)
+  edu_fpga_body2: "  Es el binario que configura la FPGA. Cada versión de UHD implementa\
+    \ un\n  protocolo interno específico que debe coincidir con la imagen grabada."
+  edu_fpga_sec3: '● ⚠  Crítico: coincidencia de versión'
+  edu_fpga_body3: "  La versión de UHD y la imagen FPGA deben coincidir exactamente\
+    \ (ej. UHD 4.10\n  con imagen 4.10). De lo contrario, uhd_find_devices o uhd_usrp_probe\
+    \ fallarán."
+  edu_fpga_sec4: ● Cómo verificarlo
+  edu_fpga_body4: "  Usa 'Diagnóstico del sistema' en esta herramienta para verificar\
+    \ la versión\n  activa de UHD frente a las imágenes locales."
+  edu_ant_title: 'Antenas: Seguridad RF y rangos de frecuencia'
+  edu_ant_warn: LEE ESTO ANTES DE CONECTAR ANTENAS O TRANSMITIR
+  edu_ant_sec1: ● Jamás transmitas sin antena o sin carga de 50Ω
+  edu_ant_body1: "  Transmitir con un puerto abierto refleja la potencia RF directamente\
+    \ hacia\n  el amplificador de potencia del USRP, pudiendo quemarlo permanentemente."
+  edu_ant_sec2: ● Rangos de antena y legalidad
+  edu_ant_body2: "  Verifica que las antenas cubran las frecuencias deseadas (ej.\
+    \ VERT900 para\n  800-900MHz, VERT2450 para 2.4/5GHz). Transmitir en frecuencias\
+    \ no autorizadas es ilegal."
+  edu_brick_title: ¿Cómo saber si mi USRP está brickeado?
+  edu_brick_sec1: ● Síntomas de un brickeo de software
+  edu_brick_body1: "  • Los LEDs frontales no encienden o quedan congelados al encender\n\
+    \  • El equipo no responde al ping en 192.168.10.2\n  • uhd_find_devices no encuentra\
+    \ el dispositivo"
+  edu_brick_sec2: ● Proceso de recuperación
+  edu_brick_body2: "  • X300/X310: Revivir temporalmente por micro-USB JTAG y luego\
+    \ flashear por red.\n  • N200/N210: Mantener presionado botón S2 al encender (IP\
+    \ segura: 192.168.10.2).\n  • B200/B210: No requiere JTAG; carga automática de\
+    \ firmware por USB 3.0."
+  edu_models_title: 'Modelos USRP: X300, X310, N210, B2xx'
+  edu_models_body: "  ★ USRP X300 / X310\n    FPGA Kintex-7, doble SFP+ (1G/10G),\
+    \ 2 ranuras para hijas (SBX, UBX, TwinRX).\n    Recuperación: JTAG micro-USB frontal\
+    \ + flasheo por red.\n\n  ★ USRP N200 / N210\n    FPGA Spartan-3A DSP, Gigabit\
+    \ Ethernet.\n    Recuperación: Botón modo seguro S2 / flasheo de arranque por\
+    \ red.\n\n  ★ USRP B200 / B210 / B205mini\n    RFIC integrado (AD9361/AD9364),\
+    \ conexión y alimentación USB 3.0.\n    Recuperación: Carga dinámica automática\
+    \ por USB 3.0.\n\n  ★ USRP N300 / N310 / N320 / E3xx\n    Arquitectura embebida\
+    \ con Linux ARM y RFNoC."
 settings:
   title: Configuración
-  select: "Selecciona un ajuste a cambiar:"
-  language: "Language / Idioma"
-  images_dir: "Directorio caché de imágenes FPGA"
-  uhd_versions_dir: "Directorio de instalaciones UHD"
-  current: "Actual: %{value}"
-  select_language: "Selecciona idioma:"
-  lang_en: "English"
-  lang_es: "Español"
-  saved: "Configuración guardada."
-  enter_path: "Introduce la ruta:"
-
+  select: 'Selecciona un ajuste a cambiar:'
+  language: Language / Idioma
+  images_dir: Directorio caché de imágenes FPGA
+  uhd_versions_dir: Directorio de instalaciones UHD
+  current: 'Actual: %{value}'
+  select_language: 'Selecciona idioma:'
+  lang_en: English
+  lang_es: Español
+  saved: Configuración guardada.
+  enter_path: 'Introduce la ruta:'
 common:
-  back: "← Volver"
-  confirm: "¿Estás seguro?"
-  press_enter: "Pulsa Enter para continuar..."
-  error_occurred: "Se produjo un error: %{err}"
-  no_internet: "Sin conexión a internet o la API de GitHub no está disponible."
-  not_implemented: "[No implementado en esta versión]"
+  back: ← Volver
+  confirm: ¿Estás seguro?
+  press_enter: Pulsa Enter para continuar...
+  error_occurred: 'Se produjo un error: %{err}'
+  no_internet: Sin conexión a internet o la API de GitHub no está disponible.
+  not_implemented: '[No implementado en esta versión]'
 probe:
-  title: "Probar USRP (Hardware y Subdispositivos)"
-  intro: "Consulta el dispositivo USRP mediante uhd_usrp_probe para obtener detalles de placa madre, subdispositivos, relojes DSP, sensores y frontends de RF."
-  no_uhd: "No se encontró uhd_find_devices ni uhd_usrp_probe en el PATH. Instala UHD primero desde 'Gestionar drivers UHD'."
-  scanning: "Buscando dispositivos USRP conectados por red o USB..."
-  manual_args_prompt: "¿Deseas especificar los argumentos del dispositivo manualmente (ej. addr=192.168.10.2)?"
-  enter_args: "Argumentos del dispositivo:"
-  select_device: "Selecciona el dispositivo a sondear:"
-  running_probe: "Consultando especificaciones del hardware..."
-  probe_failed: "Falló la consulta de especificaciones del USRP."
-  summary_title: "Especificaciones del hardware obtenidas correctamente."
-  show_full_log: "¿Deseas ver el volcado completo de hardware?"
+  title: Probar USRP (Hardware y Subdispositivos)
+  intro: Consulta el dispositivo USRP mediante uhd_usrp_probe para obtener detalles
+    de placa madre, subdispositivos, relojes DSP, sensores y frontends de RF.
+  no_uhd: No se encontró uhd_find_devices ni uhd_usrp_probe en el PATH. Instala UHD
+    primero desde 'Gestionar drivers UHD'.
+  scanning: Buscando dispositivos USRP conectados por red o USB...
+  manual_args_prompt: ¿Deseas especificar los argumentos del dispositivo manualmente
+    (ej. addr=192.168.10.2)?
+  enter_args: 'Argumentos del dispositivo:'
+  select_device: 'Selecciona el dispositivo a sondear:'
+  running_probe: Consultando especificaciones del hardware...
+  probe_failed: Falló la consulta de especificaciones del USRP.
+  summary_title: Especificaciones del hardware obtenidas correctamente.
+  show_full_log: ¿Deseas ver el volcado completo de hardware?

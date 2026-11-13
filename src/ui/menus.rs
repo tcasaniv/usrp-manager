@@ -54,7 +54,7 @@ pub fn main_menu(config: &mut AppConfig) {
                 settings_menu(config);
             }
             _ => {
-                println!("\n  {} Goodbye!\n", style("👋").bold());
+                println!("\n  {} {}\n", style("👋").bold(), t!("menu.goodbye"));
                 break;
             }
         }
@@ -147,9 +147,9 @@ pub fn diagnostic_menu(config: &AppConfig) {
     // Admin status
     println!();
     if system::is_admin() {
-        ok("Running with administrator / root privileges");
+        ok(&t!("menu.admin_ok"));
     } else {
-        warn("Not running as administrator. Some operations (PATH update, install) may require re-running as admin.");
+        warn(&t!("menu.admin_warn"));
     }
 
     println!();

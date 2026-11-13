@@ -1,6 +1,6 @@
 [package]
 name = "usrp-manager"
-version = "0.2.5"
+version = "0.2.6"
 edition = "2021"
 description = "Interactive CLI for managing Ettus Research USRP SDR devices"
 authors = ["tcasaniv <https://github.com/tcasaniv>"]
@@ -29,6 +29,10 @@ dirs       = "5"
 anyhow     = "1"
 thiserror  = "2"
 chrono     = { version = "0.4", features = ["serde"] }
+
+[build-dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
 
 [target.'cfg(windows)'.dependencies]
 winreg = "0.52"

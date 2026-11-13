@@ -11,10 +11,11 @@ use which::which;
 pub fn run_flash_network(config: &AppConfig) {
     print_section(&t!("flash.title"));
     println!(
-        "\n  {}\n  Este asistente escribe una imagen FPGA en la memoria flash interna (no volátil) del USRP.\n  A diferencia de JTAG (que se borra al apagar), la imagen guardada se cargará automáticamente cada vez que enciendas el USRP.\n",
-        style("● ¿En qué consiste el Flasheo Permanente?").cyan().bold()
+        "\n  {}\n  {}\n",
+        style(t!("flash.what_title")).cyan().bold(),
+        t!("flash.what_body")
     );
-    warn("PRECAUCIÓN: NO desconectes el cable Ethernet ni apagues el USRP durante el flasheo.");
+    warn(&t!("flash.caution_unplug"));
     println!();
 
     // 1. Check uhd_image_loader in PATH
@@ -22,7 +23,7 @@ pub fn run_flash_network(config: &AppConfig) {
         Ok(p) => p,
         Err(_) => {
             err(&t!("flash.no_uhd"));
-            dim("  Instala o activa UHD con 'Gestionar drivers UHD' antes de continuar.");
+            dim(&format!("  {}", t!("flash.mismatch_hint")));
             press_enter();
             return;
         }
@@ -30,18 +31,18 @@ pub fn run_flash_network(config: &AppConfig) {
 
     // 2. Select Connection Mode
     let mode_options = vec![
-        "🔍 Autodetectar USRP en la red (uhd_find_devices)".to_string(),
-        "⌨️  Ingresar dirección IP manualmente (ej. 192.168.10.2)".to_string(),
+        t!("flash.mode_autodetect").to_string(),
+        t!("flash.mode_manual_ip").to_string(),
         t!("common.back").to_string(),
     ];
-    let mode_idx = match select_str("¿Cómo deseas conectar con el USRP?", &mode_options) {
+    let mode_idx = match select_str(&t!("flash.select_conn_mode"), &mode_options) {
         Ok(i) => i,
         Err(_) => return,
     };
 
     let target_ip = match mode_idx {
         0 => {
-            step("Escaneando red con uhd_find_devices...");
+            step(&t!("flash.scanning_network"));
             let find_bin = which("uhd_find_devices").unwrap_or_else(|_| std::path::PathBuf::from("uhd_find_devices"));
             let find_res = run_visible(find_bin.to_str().unwrap_or("uhd_find_devices"), &[]);
             let mut detected_ips = Vec::new();
@@ -57,8 +58,8 @@ pub fn run_flash_network(config: &AppConfig) {
                 }
             }
             if detected_ips.is_empty() {
-                warn("No se detectó ningún USRP automáticamente.");
-                dim("Verifica que el cable esté en el puerto SFP0 y tu IP local sea 192.168.10.1.");
+                warn(&t!("flash.none_detected"));
+                dim(&t!("flash.verify_sfp_tip"));
                 println!();
                 match input(&t!("flash.enter_ip"), Some("192.168.10.2")) {
                     Ok(s) => s,
@@ -66,7 +67,7 @@ pub fn run_flash_network(config: &AppConfig) {
                 }
             } else {
                 detected_ips.push(t!("common.back").to_string());
-                match select_str("Selecciona el USRP detectado:", &detected_ips) {
+                match select_str(&t!("flash.select_detected"), &detected_ips) {
                     Ok(idx) if idx < detected_ips.len() - 1 => detected_ips[idx].clone(),
                     _ => return,
                 }
@@ -80,13 +81,13 @@ pub fn run_flash_network(config: &AppConfig) {
     };
 
     // 3. Test ping
-    step(&format!("Probando conectividad (ping) con {}...", target_ip));
+    step(&t!("flash.pinging_host", ip = target_ip.as_str()));
     if ping(&target_ip) {
-        ok(&format!("USRP responde en {}", target_ip));
+        ok(&t!("flash.ping_success", ip = target_ip.as_str()));
     } else {
-        warn(&format!("El USRP en {} no respondió al ping.", target_ip));
-        dim("  Si el USRP está brickeado (sin LEDs frontales), primero debes usar 'Desbrickear por JTAG'.");
-        if let Ok(false) = confirm("¿Deseas intentar continuar de todas formas?", false) {
+        warn(&t!("flash.ping_timeout", ip = target_ip.as_str()));
+        dim(&format!("  {}", t!("flash.bricked_guidance")));
+        if let Ok(false) = confirm(&t!("flash.continue_anyway"), false) {
             press_enter();
             return;
         }
@@ -95,17 +96,17 @@ pub fn run_flash_network(config: &AppConfig) {
     // 4. Select USRP Model with friendly guidance
     println!();
     println!(
-        "  {}\n  Cada modelo utiliza un formato y tipo de imagen específico:",
-        style("● Selección de Modelo de USRP").cyan().bold()
+        "  {}\n",
+        style(t!("flash.select_model_title")).cyan().bold()
     );
     let models = vec![
-        "USRP N200 / N210  (Imágenes en formato .bin)".to_string(),
-        "USRP X300 / X310  (Imágenes en formato .bit, variantes HG o XG)".to_string(),
-        "USRP N300 / N310 / N320 (Arquitectura HG/XG/AA/WX)".to_string(),
-        "USRP E310 / E320".to_string(),
+        t!("flash.model_n200").to_string(),
+        t!("flash.model_x300").to_string(),
+        t!("flash.model_n300").to_string(),
+        t!("flash.model_e310").to_string(),
         t!("common.back").to_string(),
     ];
-    let model_idx = match select_str("Selecciona el modelo de tu USRP:", &models) {
+    let model_idx = match select_str(&t!("flash.select_model_prompt"), &models) {
         Ok(i) => i,
         Err(_) => return,
     };
@@ -124,16 +125,17 @@ pub fn run_flash_network(config: &AppConfig) {
     // 5. Select Image Version and Variant with explanation
     println!();
     println!(
-        "  {}\n  • HG (1G/10G): Puerto 0 a 1 Gigabit (estándar común RJ45), Puerto 1 a 10G. (Recomendado)\n  • XG (Dual 10G): Ambos puertos SFP+ a 10 Gigabit (requiere tarjeta 10G en PC).\n  • Sin sufijo / Default: Configuración estándar del fabricante para N210.",
-        style("● ¿Qué significan las variantes de imagen?").cyan().bold()
+        "  {}\n  {}",
+        style(t!("flash.variant_explanation")).cyan().bold(),
+        t!("flash.variant_explanation_body")
     );
 
     let local_sets = list_local_images(&config.images_cache_dir);
     let chosen_fpga_path = if local_sets.is_empty() {
-        warn("No tienes imágenes descargadas en la caché local.");
-        dim("  Puedes descargarlas en 'Gestionar imágenes FPGA'.");
+        warn(&t!("flash.no_cached_images"));
+        dim(&format!("  {}", t!("flash.cache_hint")));
         println!();
-        match input("Ruta completa al archivo de imagen (.bit o .bin):", None) {
+        match input(&t!("flash.enter_image_path"), None) {
             Ok(p) => p,
             Err(_) => return,
         }
@@ -163,10 +165,10 @@ pub fn run_flash_network(config: &AppConfig) {
             }
         }
 
-        img_choices.push("📁 Ingresar ruta de archivo manualmente...".to_string());
+        img_choices.push(t!("flash.manual_file_option").to_string());
         img_choices.push(t!("common.back").to_string());
 
-        let sel_idx = match select_str("Selecciona la imagen FPGA que deseas grabar:", &img_choices) {
+        let sel_idx = match select_str(&t!("flash.select_image_prompt"), &img_choices) {
             Ok(i) => i,
             Err(_) => return,
         };
@@ -174,7 +176,7 @@ pub fn run_flash_network(config: &AppConfig) {
         if sel_idx == img_choices.len() - 1 {
             return;
         } else if sel_idx == img_choices.len() - 2 {
-            match input("Ruta completa al archivo de imagen:", None) {
+            match input(&t!("flash.enter_image_path"), None) {
                 Ok(p) => p,
                 Err(_) => return,
             }
@@ -188,10 +190,10 @@ pub fn run_flash_network(config: &AppConfig) {
     let args_spec = format!("type={},addr={}", usrp_type, target_ip);
 
     println!();
-    println!("{}", style("────────────────────────── RESUMEN DE FLASHEO ──────────────────────────").cyan());
-    println!("  Dispositivo:  USRP {} ({})", usrp_type.to_uppercase(), target_ip);
-    println!("  Archivo FPGA: {}", chosen_fpga_path);
-    println!("  Comando CLI que se ejecutará:");
+    println!("{}", style(format!("─── {} ───", t!("flash.summary_title"))).cyan());
+    println!("  {}", t!("flash.summary_device", model = usrp_type.to_uppercase().as_str(), ip = target_ip.as_str()));
+    println!("  {}", t!("flash.summary_file", path = chosen_fpga_path.as_str()));
+    println!("  {}", t!("flash.summary_cmd"));
     println!(
         "  {}",
         style(format!("● {} --args \"{}\" --fpga-path \"{}\"", loader_str, args_spec, chosen_fpga_path))
@@ -201,27 +203,28 @@ pub fn run_flash_network(config: &AppConfig) {
     println!("{}", style("────────────────────────────────────────────────────────────────────────").cyan());
     println!();
 
-    match confirm("¿Estás seguro de que deseas flashear esta imagen permanentemente?", true) {
+    match confirm(&t!("flash.confirm_permanent"), true) {
         Ok(true) => {
-            step("Ejecutando flasheo. No apagues el equipo...");
+            step(&t!("flash.executing_flash"));
             let res = run_visible(
                 loader_str,
                 &["--args", &args_spec, "--fpga-path", &chosen_fpga_path],
             );
             if res.success {
-                ok("¡Flasheo completado con éxito!");
+                ok(&t!("flash.flash_success"));
                 println!();
                 println!(
-                    "  {}\n  Apaga el USRP, espera 5 segundos y vuelve a encenderlo para cargar la nueva imagen.",
-                    style("IMPORTANTE: Reinicio requerido").green().bold()
+                    "  {}\n  {}",
+                    style(t!("flash.reboot_required")).green().bold(),
+                    t!("flash.reboot_instruction")
                 );
             } else {
-                err("El proceso de flasheo devolvió un error.");
-                dim("Verifica que la versión de UHD activa sea compatible con el USRP.");
+                err(&t!("flash.flash_error"));
+                dim(&t!("flash.verify_uhd_tip"));
             }
         }
         _ => {
-            info("Operación cancelada.");
+            info(&t!("flash.op_cancelled"));
         }
     }
 
