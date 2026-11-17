@@ -44,7 +44,7 @@ pub fn main_menu(config: &mut AppConfig) {
 
         match idx {
             0 => diagnostic_menu(config),
-            1 => crate::ui::probe::run_probe_menu(),
+            1 => crate::ui::probe::run_probe_menu(config),
             2 => crate::jtag::run_jtag_unbrick(config),
             3 => crate::flash::run_flash_network(config),
             4 => images_menu(config),
@@ -109,8 +109,8 @@ pub fn diagnostic_menu(config: &AppConfig) {
                         if let Some(fpga_ver) = &found.fpga_version {
                             info(&format!("  FPGA image version: {}", fpga_ver));
                             // Check mismatch
-                            let uhd_major_minor = u.version.split('.').take(2).collect::<Vec<_>>().join(".");
-                            let fpga_major_minor = fpga_ver.split('.').take(2).collect::<Vec<_>>().join(".");
+                            let uhd_major_minor = normalize_version_major_minor(&u.version);
+                            let fpga_major_minor = normalize_version_major_minor(fpga_ver);
                             if !uhd_major_minor.is_empty() && uhd_major_minor != fpga_major_minor {
                                 warn(&t!(
                                     "diagnostic.version_mismatch",
@@ -722,4 +722,25 @@ pub fn settings_menu(config: &mut AppConfig) {
             _ => break,
         }
     }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Normalize a UHD/FPGA version string to "major.minor" using only numeric parts.
+/// Strips suffixes like ".HEAD", ".dev", ".rc1" before comparing.
+fn normalize_version_major_minor(v: &str) -> String {
+    v.split('.')
+        .filter_map(|part| {
+            if part.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false) {
+                let numeric: String = part.chars().take_while(|c| c.is_ascii_digit()).collect();
+                if numeric.is_empty() { None } else { Some(numeric) }
+            } else {
+                None
+            }
+        })
+        .take(2)
+        .collect::<Vec<_>>()
+        .join(".")
 }

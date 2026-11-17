@@ -5,7 +5,7 @@ menu:
   main_prompt: ¿Qué deseas hacer?
   diagnostic: 🔍  Diagnóstico del sistema
   probe: 📡  Probar USRP (Información de Hardware)
-  jtag_unbrick: ⚡  Desbrickear por JTAG
+  jtag_unbrick: '⚡  JTAG: Cargar / Probar FPGA temporal'
   flash_network: 🌐  Flashear FPGA por Red (permanente)
   manage_images: 📥  Gestionar imágenes FPGA
   manage_drivers: 🛠  Gestionar drivers UHD
@@ -31,7 +31,7 @@ diagnostic:
   all_ok: ¡Todo listo!
   rerun_tip: Puedes ejecutar esto en cualquier momento desde el menú principal
 jtag:
-  title: Desbrickear por JTAG
+  title: 'JTAG: Cargar y Probar FPGA Temporal'
   intro: 'Este procedimiento carga una imagen FPGA en RAM a través del cable USB JTAG.
 
     El USRP volverá a funcionar (temporal — se borra al apagar).
@@ -72,13 +72,12 @@ jtag:
   offer_permanent: ¿Flashear esta imagen permanentemente ahora? (recomendado)
   already_bricked_tip: Si falló la programación JTAG, comprueba que el cable USB está
     en el puerto JTAG (no en el puerto USB3).
-  what_is_bricked: ¿Qué significa que tu USRP esté brickeado?
-  what_is_bricked_body: 'Si un flasheo previo se interrumpió o la imagen se corrompió,
-    el USRP no puede arrancar,
-
-    quedando sin LEDs o sin responder a la red. Esto NO daña el hardware:
-
-    la FPGA se puede revivir por JTAG.'
+  what_is_bricked: ¿Para qué sirve JTAG?
+  what_is_bricked_body: "JTAG carga una imagen FPGA en la RAM volátil sin tocar\
+    \ la flash interna.\n  Útil en dos escenarios:\n  1. RECUPERACIÓN: Si el USRP\
+    \ está brickeado (LEDs apagados, sin ping), JTAG lo revive temporalmente.\n\
+    \  2. PRUEBA: Carga una imagen FPGA nueva para probarla sin sobreescribir la\
+    \ flash permanente.\n  La imagen se borra con cada ciclo de alimentación."
   how_jtag_works: ¿Cómo funciona la recuperación por JTAG?
   how_jtag_works_body: 'El cable USB JTAG programa la FPGA directamente en memoria
     volátil (RAM).
@@ -138,6 +137,9 @@ jtag:
   check_connection_tip: Verifica que el cable esté firmemente conectado y el USRP
     encendido.
   op_cancelled: Operación cancelada.
+  select_image_version: 'Selecciona la versión de imagen UHD:'
+  no_bits_for_model: No se encontraron archivos .bit para este modelo en la versión
+    seleccionada.
 flash:
   title: Flashear FPGA por Red (permanente)
   intro: 'Escribe la imagen FPGA en la memoria flash interna del USRP.
@@ -371,3 +373,4 @@ probe:
   probe_failed: Falló la consulta de especificaciones del USRP.
   summary_title: Especificaciones del hardware obtenidas correctamente.
   show_full_log: ¿Deseas ver el volcado completo de hardware?
+  select_uhd_version: 'Selecciona la versión de UHD para el probe:'

@@ -21,6 +21,18 @@ pub fn select_str(prompt: &str, items: &[String]) -> Result<usize> {
     select(prompt, &refs)
 }
 
+
+/// Select with String slice and a configurable default index (cursor starts there)
+pub fn select_str_with_default(prompt: &str, items: &[String], default: usize) -> Result<usize> {
+    let refs: Vec<&str> = items.iter().map(|s| s.as_str()).collect();
+    let idx = Select::with_theme(&theme())
+        .with_prompt(prompt)
+        .items(&refs)
+        .default(default)
+        .interact()?;
+    Ok(idx)
+}
+
 /// FuzzySelect for longer lists (type to filter, arrow keys to navigate)
 pub fn fuzzy_select(prompt: &str, items: &[&str]) -> Result<usize> {
     let idx = FuzzySelect::with_theme(&theme())

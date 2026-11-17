@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.7] — 2026-11-16
+
+### Added
+- **JTAG image filtering**: After selecting USRP model, now asks for UHD image version
+  and filters `.bit` files to only those matching the model (and HG/XG variant for X300/X310).
+  Active UHD version is pre-highlighted with ★ in the version list.
+- **Probe UHD version selector**: After `uhd_find_devices`, offers a version selector from
+  all installed UHD versions (cursor pre-placed on the active one) before running
+  `uhd_usrp_probe`. The active PATH UHD is never changed.
+- **`select_str_with_default`**: New prompt helper in `src/ui/prompts.rs` that exposes
+  `dialoguer::Select`'s `.default(idx)` for configurable cursor start position.
+
+### Fixed
+- **Version mismatch false positive**: Added `normalize_version_major_minor()` helper that
+  strips non-numeric suffixes (`.HEAD`, `.dev`, `.rc1`, etc.) before comparing major.minor
+  versions, eliminating false alarms for source-built UHD installations.
+
+### Changed
+- **JTAG menu renamed**: "Unbrick via JTAG" / "Desbrickear por JTAG" →
+  "JTAG: Load / Test Temporary FPGA" / "JTAG: Cargar / Probar FPGA temporal" to reflect
+  that JTAG is used both for recovery AND safe image testing.
+- **JTAG intro text updated**: Now explains both recovery and testing use-cases clearly.
+
 ## [0.2.6] - 2026-11-13
 
 ### Added

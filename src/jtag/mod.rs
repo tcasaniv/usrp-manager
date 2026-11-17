@@ -118,48 +118,106 @@ pub fn run_jtag_unbrick(config: &AppConfig) {
         warn(&t!("jtag.fpga_not_identified"));
     }
 
-    // 5. Select bitstream image to load
+    // 5. Load image sets and bail early if none
     let local_sets = list_local_images(&config.images_cache_dir);
-    let chosen_bitfile = if local_sets.is_empty() {
+    if local_sets.is_empty() {
         warn(&t!("jtag.no_cached_bits"));
         dim(&format!("  {}", t!("jtag.cache_hint")));
-        match input(&t!("jtag.enter_bit_path"), None) {
-            Ok(p) => p,
-            Err(_) => return,
-        }
-    } else {
-        let mut bits = Vec::new();
-        for set in &local_sets {
-            for b in &set.bitfiles {
-                let fname = b.file_name().unwrap_or_default().to_string_lossy();
-                if fname.ends_with(".bit") {
-                    bits.push(b.display().to_string());
-                }
-            }
-        }
-        if bits.is_empty() {
-            match input(&t!("jtag.enter_bit_path"), None) {
-                Ok(p) => p,
-                Err(_) => return,
-            }
-        } else {
-            bits.push(t!("jtag.manual_bit_option").to_string());
-            bits.push(t!("common.back").to_string());
-            let s_idx = match select_str(&t!("jtag.select_bit_prompt"), &bits) {
-                Ok(i) => i,
-                Err(_) => return,
+        press_enter();
+        return;
+    }
+
+    // 5a. Select UHD image version — cursor pre-placed on version matching active UHD
+    let active_ver = crate::detection::uhd::detect_active().map(|u| u.version);
+    let mut ver_opts: Vec<String> = local_sets
+        .iter()
+        .map(|s| {
+            let marker = if active_ver.as_deref() == Some(s.version.as_str()) {
+                "  ★ (active UHD)"
+            } else {
+                ""
             };
-            if s_idx == bits.len() - 1 {
-                return;
-            } else if s_idx == bits.len() - 2 {
+            format!("v{}  ({} .bit files){}", s.version, s.bitfiles.len(), marker)
+        })
+        .collect();
+    ver_opts.push(t!("common.back").to_string());
+
+    let ver_idx = match select_str(&t!("jtag.select_image_version"), &ver_opts) {
+        Ok(i) if i < local_sets.len() => i,
+        _ => return,
+    };
+    let chosen_set = &local_sets[ver_idx];
+
+    // 5b. Filter .bit files for the chosen model and (if X300/X310) variant
+    let chosen_bitfile: String = match model_idx {
+        0 => {
+            // N200 / N210: filenames contain "n210" or "n200"
+            let mut bits: Vec<String> = chosen_set
+                .bitfiles
+                .iter()
+                .filter(|p| {
+                    let name = p.file_name().unwrap_or_default()
+                        .to_string_lossy().to_lowercase();
+                    name.ends_with(".bit")
+                        && (name.contains("n210") || name.contains("n200"))
+                })
+                .map(|p| p.display().to_string())
+                .collect();
+
+            if bits.is_empty() {
+                warn(&t!("jtag.no_bits_for_model"));
                 match input(&t!("jtag.enter_bit_path"), None) {
                     Ok(p) => p,
                     Err(_) => return,
                 }
             } else {
-                bits[s_idx].clone()
+                bits.push(t!("jtag.manual_bit_option").to_string());
+                bits.push(t!("common.back").to_string());
+                let idx = match select_str(&t!("jtag.select_bit_prompt"), &bits) {
+                    Ok(i) => i,
+                    Err(_) => return,
+                };
+                if idx == bits.len() - 1 {
+                    return;
+                } else if idx == bits.len() - 2 {
+                    match input(&t!("jtag.enter_bit_path"), None) {
+                        Ok(p) => p,
+                        Err(_) => return,
+                    }
+                } else {
+                    bits[idx].clone()
+                }
             }
         }
+        1 => {
+            // X300 / X310: ask HG vs XG variant then resolve exact .bit file
+            let variant_opts = vec![
+                t!("jtag.variant_hg").to_string(),
+                t!("jtag.variant_xg").to_string(),
+                t!("common.back").to_string(),
+            ];
+            let var_idx = match select_str(&t!("jtag.select_variant"), &variant_opts) {
+                Ok(i) if i < 2 => i,
+                _ => return,
+            };
+            let variant = if var_idx == 0 { "HG" } else { "XG" };
+
+            // Try X300 first, then X310
+            let found = crate::images::local::find_bitstream_in_set(chosen_set, "x300", variant)
+                .or_else(|| crate::images::local::find_bitstream_in_set(chosen_set, "x310", variant));
+
+            match found {
+                Some(p) => p.display().to_string(),
+                None => {
+                    warn(&t!("jtag.no_bits_for_model"));
+                    match input(&t!("jtag.enter_bit_path"), None) {
+                        Ok(p) => p,
+                        Err(_) => return,
+                    }
+                }
+            }
+        }
+        _ => return,
     };
 
     // 6. Build command and show to user

@@ -5,7 +5,7 @@ menu:
   main_prompt: What would you like to do?
   diagnostic: 🔍  System Diagnostic
   probe: 📡  Probe USRP (Hardware Info)
-  jtag_unbrick: ⚡  Unbrick via JTAG
+  jtag_unbrick: '⚡  JTAG: Load / Test Temporary FPGA'
   flash_network: 🌐  Flash FPGA via Network (permanent)
   manage_images: 📥  Manage FPGA Images
   manage_drivers: 🛠  Manage UHD Drivers
@@ -31,7 +31,7 @@ diagnostic:
   all_ok: All systems ready!
   rerun_tip: Re-run any time from the main menu
 jtag:
-  title: Unbrick via JTAG
+  title: 'JTAG: Temporary FPGA Load & Test'
   intro: 'This procedure loads a FPGA image into RAM via USB JTAG cable.
 
     The USRP will become operational again (temporary — until power-cycle).
@@ -71,13 +71,12 @@ jtag:
   offer_permanent: Flash this image permanently to internal flash now? (recommended)
   already_bricked_tip: If JTAG programming failed, check the USB cable is in the JTAG
     port (not the USB3 port).
-  what_is_bricked: What does it mean if your USRP is bricked?
-  what_is_bricked_body: 'If a previous flash was interrupted or corrupted, the USRP
-    cannot boot,
-
-    leaving LEDs off or failing on network. This does NOT damage hardware:
-
-    the FPGA can be revived via JTAG.'
+  what_is_bricked: What can you do with JTAG?
+  what_is_bricked_body: "JTAG loads an FPGA image into volatile RAM without touching\
+    \ internal flash.\n  Useful in two scenarios:\n  1. RECOVERY: If the USRP is\
+    \ bricked (LEDs off, no ping), JTAG revives it temporarily.\n  2. TESTING: Load\
+    \ a new FPGA image to test without permanently overwriting flash.\n  The image\
+    \ is cleared on every power-cycle."
   how_jtag_works: How does JTAG recovery work?
   how_jtag_works_body: 'The USB JTAG cable programs the FPGA directly in volatile
     RAM.
@@ -137,6 +136,8 @@ jtag:
   prog_failed: JTAG programming failed.
   check_connection_tip: Verify cable is firmly connected and USRP powered on.
   op_cancelled: Operation cancelled.
+  select_image_version: 'Select UHD image version:'
+  no_bits_for_model: No .bit files found for this model in the selected version.
 flash:
   title: Flash FPGA via Network (permanent)
   intro: 'This writes the FPGA image to the USRP''s internal flash memory.
@@ -363,3 +364,4 @@ probe:
   probe_failed: Failed to query USRP hardware specifications.
   summary_title: Hardware specifications successfully retrieved.
   show_full_log: Do you want to inspect the complete hardware dump?
+  select_uhd_version: 'Select UHD version for probe:'

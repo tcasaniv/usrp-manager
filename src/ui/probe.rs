@@ -1,25 +1,18 @@
+use crate::config::AppConfig;
+use crate::detection::{uhd, uhd_versions};
 use crate::executor::run_visible;
-use crate::ui::prompts::{confirm, input, select_str};
+use crate::ui::prompts::{confirm, input, select_str, select_str_with_default};
 use crate::ui::styles::{dim, err, ok, press_enter, print_section, step, warn};
 use console::style;
 use rust_i18n::t;
 use which::which;
 
-pub fn run_probe_menu() {
+pub fn run_probe_menu(config: &AppConfig) {
     print_section(&t!("probe.title"));
     dim(&t!("probe.intro"));
     println!();
 
     let uhd_find = match which("uhd_find_devices") {
-        Ok(p) => p,
-        Err(_) => {
-            err(&t!("probe.no_uhd"));
-            press_enter();
-            return;
-        }
-    };
-
-    let uhd_probe = match which("uhd_usrp_probe") {
         Ok(p) => p,
         Err(_) => {
             err(&t!("probe.no_uhd"));
@@ -69,12 +62,69 @@ pub fn run_probe_menu() {
         }
     };
 
+    // ── UHD version selector ─────────────────────────────────────────────────
+    let active = uhd::detect_active();
+    let active_bin = active.as_ref().map(|a| a.bin_dir.as_path());
+    let installed = uhd_versions::detect_installed_versions(
+        &config.uhd_versions_dir,
+        active_bin,
+    );
+
+    let uhd_probe_path: std::path::PathBuf = if installed.is_empty() {
+        // No versioned installations found — fall back to PATH
+        match which("uhd_usrp_probe") {
+            Ok(p) => p,
+            Err(_) => {
+                err(&t!("probe.no_uhd"));
+                press_enter();
+                return;
+            }
+        }
+    } else {
+        // Build display list; active version marked with ★
+        let mut ver_items: Vec<String> = installed
+            .iter()
+            .map(|v| {
+                let marker = if v.is_active { "  ★ (active)" } else { "" };
+                format!("UHD {}  —  {}{}", v.version, v.install_dir.display(), marker)
+            })
+            .collect();
+        ver_items.push(t!("common.back").to_string());
+
+        // Cursor starts at the active version (or index 0 if none marked active)
+        let default_idx = installed.iter().position(|v| v.is_active).unwrap_or(0);
+
+        let sel = match select_str_with_default(
+            &t!("probe.select_uhd_version"),
+            &ver_items,
+            default_idx,
+        ) {
+            Ok(i) if i < installed.len() => i,
+            _ => return, // ← Back or ESC
+        };
+
+        // Resolve uhd_usrp_probe binary path in the selected installation
+        let probe_bin = installed[sel].bin_dir.join(if cfg!(target_os = "windows") {
+            "uhd_usrp_probe.exe"
+        } else {
+            "uhd_usrp_probe"
+        });
+
+        if !probe_bin.exists() {
+            err(&t!("probe.no_uhd"));
+            press_enter();
+            return;
+        }
+        probe_bin
+    };
+    // ────────────────────────────────────────────────────────────────────────
+
     println!();
     step(&t!("probe.running_probe"));
-    // Execute uhd_usrp_probe visibly
+    // Execute uhd_usrp_probe visibly using the chosen version's binary
     let args_str = chosen_args.trim();
     let probe_res = run_visible(
-        uhd_probe.to_str().unwrap_or("uhd_usrp_probe"),
+        uhd_probe_path.to_str().unwrap_or("uhd_usrp_probe"),
         &["--args", args_str],
     );
 
@@ -89,7 +139,6 @@ pub fn run_probe_menu() {
             if l.contains("Mboard:") || l.contains("Device:") || l.contains("product:") {
                 println!("  {} {}", style("●").cyan(), l);
             } else if l.contains("Serial:") || l.contains("serial:") {
-                println!("  {} {}", style("?").magenta(), l);
                 println!("  {} {}", style("●").cyan(), l);
             } else if l.contains("FW Version:") || l.contains("FPGA Version:") {
                 println!("  {} {}", style("●").green().bold(), l);
